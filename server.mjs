@@ -6,7 +6,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { prepare, transcribe, analyze, plan, finalize, opsForCursor, writeComposition, chat, render, APP_URL } from './lib/pipeline.mjs';
 import { aiMode } from './lib/ai.mjs';
-import { tagBrolls } from './lib/vision.mjs';
+import { tagBrolls, tagMain } from './lib/vision.mjs';
 import { queueInfo } from './lib/queue.mjs';
 
 const ROOT = import.meta.dirname;
@@ -57,11 +57,14 @@ async function pipeline(j) {
   try {
     step(j, 'Nhận video');
     await prepare(j, s => step(j, s), live);
+    // AI xem video chính (người nói đang ở đâu, đang khoe gì) chạy song song với chép lời
+    const mainTag = tagMain(j, s => step(j, s)).catch(e => step(j, 'AI xem video chính lỗi: ' + e.message));
     await transcribe(j, s => step(j, s), live);
     await analyze(j, s => step(j, s), live);
     if (j.brollsReady) await j.brollsReady;
     await tagBrolls(j, s => step(j, s), live).catch(e => step(j, 'AI nhìn cảnh phụ lỗi: ' + e.message));
-    step(j, 'AI đọc lời nói: tìm đoạn nói hỏng, chọn chữ điểm nhấn, ghép cảnh phụ…');
+    await mainTag;
+    step(j, 'AI đọc hiểu video: tóm ý, viết kịch bản dựng, tìm đoạn nói hỏng, chọn chữ, ghép cảnh phụ theo hình…');
     const p = await plan(j, s => step(j, s), live);
     const { T, removed } = finalize(j, p);
     fs.writeFileSync(path.join(j.dir, 'timeline.json'), JSON.stringify(T, null, 2));

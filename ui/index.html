@@ -38,6 +38,15 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.5px}h1 span{color:var(--mut)}
 .top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #222528}
 .top .t{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top .ai{font-size:12px;color:var(--mut)}
+/* KỊCH BẢN AI: AI đọc hiểu video → tóm ý + các phần dựng */
+.story{margin:8px 12px 0;background:var(--card);border:1px solid #26292e;border-radius:12px;padding:9px 12px;font-size:13px;line-height:1.4}
+.story .sum{color:#e8e9ea}.story .sum b{color:var(--acc);font-weight:600}.story .meta{color:var(--mut);font-size:12px;margin-top:3px}
+.story .parts{display:flex;gap:6px;overflow-x:auto;margin-top:7px;padding-bottom:2px}
+.story .pt{flex:none;background:#1b1d21;border:1px solid #33363c;border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;color:#fff;animation:ptin .35s ease}
+.story .pt i{font-style:normal;color:var(--mut);margin-left:5px}.story .pt:hover{border-color:var(--acc)}
+@keyframes ptin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:899px){.story{margin:6px 8px 0;padding:7px 10px;font-size:12px}.story .sum{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .story .meta{display:none}.story.open .meta{display:block}.story.open .sum{-webkit-line-clamp:unset}.story .parts{margin-top:5px}}
 .main{flex:1;display:flex;min-height:0}
 .view{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;min-height:0;position:relative}
 hyperframes-player{height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;display:block;border-radius:12px;overflow:hidden;background:#000}
@@ -116,6 +125,7 @@ hyperframes-player{height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;
 
 <section id="ed" class="hidden">
   <div class="top"><button class="btn ghost" id="back">‹ Mới</button><div class="t" id="title">Đang dựng…</div><span class="ai" id="aiName"></span><button class="btn" id="exp" disabled>Xuất</button></div>
+  <div id="story" class="story hidden" onclick="if(!event.target.closest('.pt'))this.classList.toggle('open')"><div class="sum"></div><div class="meta"></div><div class="parts"></div></div>
   <div class="main">
     <div class="view"><hyperframes-player id="pl" controls runtime-src="/ui/hyperframe.runtime.iife.js"></hyperframes-player><div class="wait" id="wait">AI đang dựng…</div></div>
     <div class="side">
@@ -214,6 +224,7 @@ async function openJob(id) {
   await aqDone();
   if (job.status === 'error') { idle('⚠ ' + job.error); $('#wait').textContent = job.error; return; }
   T = job.timeline; version = job.version || 0;
+  if (job.story?.summary || job.story?.parts?.length) story(job.story, job.story.parts || []);
   $('#title').textContent = `${GENRES.find(g => g[0] === job.genre)?.[1] || ''} · ${T.duration.toFixed(1)} s`;
   if (live.on && live.cuts) { // ghép các đoạn giữ lại: vạch cắt mờ đi rồi timeline co lại
     say(`Ghép các đoạn đã giữ lại: ${fmtT(live.D)} → ${fmtT(T.duration)}`);
@@ -232,7 +243,20 @@ async function openJob(id) {
 }
 
 // ---------- dựng trực tiếp (giây của video gốc) ----------
-const live = { on: false, D: 0, sent: 0, sil: 0, auto: 0, drop: 0, texts: 0, brolls: 0, hook: false, cuts: false };
+const live = { on: false, D: 0, sent: 0, sil: 0, auto: 0, drop: 0, texts: 0, brolls: 0, hook: false, cuts: false, und: false, script: 0 };
+const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const fmtS = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+function story(u, parts) {
+  const el = $('#story'); el.classList.remove('hidden');
+  if (u) { el.querySelector('.sum').innerHTML = `<b>AI hiểu video:</b> ${esc(u.summary || '')}`;
+    el.querySelector('.meta').innerHTML = [u.audience && `Người xem: ${esc(u.audience)}`, u.goal && `Mục tiêu: ${esc(u.goal)}`, u.best && `Điểm đắt: ${esc(u.best)}`].filter(Boolean).join(' · '); }
+  if (parts) { el.querySelector('.parts').innerHTML = ''; parts.forEach(x => storyPart(x.part, x.tl, x.tl, x.goal)); }
+}
+function storyPart(name, t, seekT, goal) {
+  const b = document.createElement('span'); b.className = 'pt'; b.innerHTML = `${esc(name)}<i>${fmtS(t || 0)}</i>`; if (goal) b.title = goal;
+  if (seekT != null) b.onclick = () => { try { $('#pl').seek(seekT + 0.05); } catch {} };
+  $('#story .parts').appendChild(b);
+}
 const aq = [];
 let aqRun = false;
 const fmtT = x => `${Math.floor(x / 60)}:${String(Math.round(x % 60)).padStart(2, '0')}`;
@@ -318,6 +342,14 @@ function liveDraw(lv) {
   // AI đang viết kế hoạch (chữ, cảnh phụ, đoạn nói hỏng) — hiện ngay từng mục
   const dr = lv.draft || {};
   const sTime = i => S[Math.max(0, Math.min(S.length - 1, i))];
+  // AI đọc hiểu video → tóm ý + kịch bản (hiện trước khi cắt / thêm chữ)
+  if (dr.understand?.summary && !live.und) { live.und = true; const u = dr.understand; aqPush(async f => { story(u, null); say(`AI hiểu video: <em>${esc(u.summary)}</em>`); await sleep(f ? 300 : 1400); }); }
+  for (let i = live.script; i < (dr.script || []).length; i++) {
+    const x = dr.script[i], a = sTime(x.from)?.[0];
+    if (a == null) continue;
+    aqPush(async f => { storyPart(x.part, a, null); say(`Kịch bản phần ${i + 1}: <b>${esc(x.part)}</b>${x.goal ? ' — ' + esc(x.goal) : ''}`); await sleep(f ? 200 : 900); });
+  }
+  live.script = (dr.script || []).length;
   for (let i = live.drop; i < (dr.drop || []).length; i++) {
     const d = dr.drop[i], a = sTime(d.from)?.[0], b = sTime(d.to ?? d.from)?.[1];
     if (a == null) continue;

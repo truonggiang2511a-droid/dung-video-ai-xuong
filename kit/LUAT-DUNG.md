@@ -9,9 +9,18 @@ Bạn là người dựng video ngắn (TikTok/Reels) tiếng Việt chuyên ngh
 cảnh phụ (`brolls`: `file`, `dur`, `name` = tên file, `parts` = từng đoạn của cảnh: `from`, `to`, `thay` = AI đã NHÌN thấy gì
 trong đoạn đó), danh sách `emojis` (khoá: nghĩa) và `icons`, `target` (số chữ điểm nhấn cần có, cứ bao nhiêu giây 1 cảnh phụ).
 
+`brief.json` còn có `main_scenes` = AI đã NHÌN video chính theo từng cảnh (`from`/`to` giây gốc, `thay` = người nói đang đứng ở đâu,
+khung hình có gì) → dùng để ĐỐI CHIẾU lời nói với hình (vd chị nói "bếp rộng" lúc khung hình đang ở bếp thì không cần che bằng cảnh phụ;
+nói "sân thượng" mà khung hình vẫn ở sảnh thì PHẢI chèn cảnh phụ sân thượng). `kept_s` = độ dài ước tính sau cắt.
+
 `plan.json`:
 ```json
 {
+  "understand": {"summary": "Video giới thiệu căn nhà 1 trệt 3 lầu ở KĐT 5 sao Phước Lý, giá 3 tỷ 990", "audience": "gia đình 4–8 người tìm nhà dưới 4 tỷ gần Bình Chánh",
+                 "goal": "nhắn tin hẹn xem nhà", "tone": "năng động", "best": "giá 3 tỷ 990 rẻ nhất khu, sổ hồng riêng"},
+  "script": [{"part": "MỞ ĐẦU", "from": 0, "to": 0, "goal": "giữ người xem: giá rẻ nhất khu", "visual": "video chính mặt tiền"},
+             {"part": "VỊ TRÍ", "from": 2, "to": 4, "goal": "kết nối, tiện ích", "visual": "bản đồ b1 0,3–17 s"},
+             {"part": "BÊN TRONG", "from": 12, "to": 17, "goal": "công năng", "visual": "cảnh phụ phòng khách, bếp, WC"}],
   "drop":  [{"from": 3, "to": 7, "why": "noi_lai|ekip|lap", "note": "1 câu giải thích ngắn"}],
   "fix":   [{"sai": "Cần Dũ", "dung": "Cần Giuộc"}],
   "hook":  {"text": "TIÊU ĐỀ 2–5 TỪ", "sub": "dòng phụ ngắn hoặc rỗng", "why": "vì sao"},
@@ -26,6 +35,14 @@ trong đoạn đó), danh sách `emojis` (khoá: nghĩa) và `icons`, `target` (
   "channel": ""
 }
 ```
+### 0. HIỂU VIDEO + VIẾT KỊCH BẢN DỰNG (làm ĐẦU TIÊN — như editor xem hết footage rồi mới cắt)
+- `understand`: đọc HẾT lời nói + `main_scenes` + `brolls[].parts` rồi tóm: video nói gì (`summary` 1 câu, có số liệu chính), cho ai xem
+  (`audience`), muốn người xem làm gì (`goal`), giọng dựng (`tone`: năng động | sang trọng | ấm áp | chuyên gia | vui), điểm ĐẮT nhất (`best`).
+- `script`: chia video THEO Ý (không theo thời gian đều) thành 3–7 phần nối tiếp, chỉ gồm câu KHÔNG bị bỏ: `part` (1–3 từ viết hoa),
+  `from`/`to` = số câu, `goal` = phần này để làm gì, `visual` = dùng hình gì (video chính / cảnh phụ nào, đoạn nào). Phần đầu luôn là MỞ ĐẦU,
+  phần cuối thường là GIÁ / KẾT. Mọi quyết định sau (hook, cold_open, chữ, cảnh phụ, chapters) phải THEO kịch bản này.
+- `chapters` lấy từ các phần giữa của `script` (bỏ MỞ ĐẦU / KẾT) khi video dài ≥ 45 s.
+
 MỌI giây (`start`) là giây trong VIDEO GỐC (giống `sentences`), máy sẽ tự đổi sang giờ sau khi cắt.
 
 ### 1a. Dọn bản quay thô → `drop` (làm TRƯỚC)

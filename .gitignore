@@ -1,0 +1,10 @@
+node_modules/
+jobs/
+cache/
+.xuong-key
+.env
+.env.*
+cau-hinh.txt
+test/out-*
+renders/
+.hyperframes/
