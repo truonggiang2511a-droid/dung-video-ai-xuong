@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
   await pg.selectOption('#ind', process.env.IND || 'bat-dong-san');
   if (process.env.STY) await pg.selectOption('#sty', process.env.STY);
   await pg.setInputFiles('#fMain', process.env.AROLL);
-  await pg.setInputFiles('#fB', process.env.BROLL);
+  await pg.setInputFiles('#fB', process.env.BROLL.split('|'));
   await pg.screenshot({ path: `test/out-${W}-1-setup.png` });
   const t0 = Date.now();
   await pg.click('#go');
@@ -27,6 +27,13 @@ const { chromium } = require('playwright');
   console.log('build+replay sec', ((Date.now() - t0) / 1000).toFixed(1), 'clips shown', await pg.$$eval('.clip.show', e => e.length), '/', await pg.$$eval('.clip', e => e.length));
   await pg.waitForTimeout(2500);
   await pg.screenshot({ path: `test/out-${W}-4-done.png` });
+  // thẻ “AI hiểu video” + bảng điểm: chạm mở → phải đóng lại được (4/11 19:41 Giang: “mở lên nhưng không tắt được”)
+  const hS = () => pg.$eval('#story', e => Math.round(e.getBoundingClientRect().height));
+  const h0 = await hS(); await pg.click('#story .sum'); await pg.waitForTimeout(300); const h1 = await hS();
+  await pg.screenshot({ path: `test/out-${W}-4b-story-open.png` });
+  const closeSel = (await pg.$('#story .x:visible')) ? '#story .x' : '#story .sum';
+  await pg.click(closeSel); await pg.waitForTimeout(300); const h2 = await hS();
+  console.log('story h', h0, '→ mở', h1, '→ đóng', h2, h2 <= h0 + 2 && h1 > h0 ? '✅' : '❌');
   // chọn hook rồi chat
   await pg.click('.clip[data-id=hook]');
   await pg.fill('#msg', 'đổi màu xanh lá');

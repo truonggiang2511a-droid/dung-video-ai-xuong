@@ -45,6 +45,10 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.5px}h1 span{color:var(--mut)}
 .story .miss{color:#ffb86b;margin-top:4px}
 .story .qc{margin-top:7px;font-size:12px;color:var(--mut)}.story .qc b{font-size:14px}.story .qc .sc{display:inline-block;padding:2px 9px;border-radius:999px;margin-right:6px;color:#14161a;font-weight:700}
 .story .qc ul{margin:6px 0 0;padding-left:16px;display:none}.story.open .qc ul{display:block}.story .qc li{margin:2px 0}
+/* 4/11 19:41 Giang: “thẻ AI hiểu video / bảng điểm mở lên không tắt được” → nút ✕ rõ ràng, chạm ra ngoài cũng thu gọn, mở ra không che hết video */
+.story{position:relative;cursor:pointer}.story.open{max-height:55vh;overflow-y:auto;overscroll-behavior:contain}.story.open .sum{padding-right:34px}
+.story .x{display:none;position:sticky;float:right;top:0;margin:-3px -5px 0 6px;width:30px;height:30px;border-radius:50%;border:1px solid #3a3d44;background:#1b1d21;color:#fff;font-size:15px;line-height:28px;text-align:center;cursor:pointer;z-index:2}
+.story.open .x{display:block}.story .qc .hc{display:none}.story.open .qc .ho{display:none}.story.open .qc .hc{display:inline}
 .story .parts{display:flex;gap:6px;overflow-x:auto;margin-top:7px;padding-bottom:2px}
 .story .pt{flex:none;background:#1b1d21;border:1px solid #33363c;border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;color:#fff;animation:ptin .35s ease}
 .story .pt i{font-style:normal;color:var(--mut);margin-left:5px}.story .pt:hover{border-color:var(--acc)}
@@ -132,7 +136,7 @@ hyperframes-player{height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;
 
 <section id="ed" class="hidden">
   <div class="top"><button class="btn ghost" id="back">‹ Mới</button><div class="t" id="title">Đang dựng…</div><span class="ai" id="aiName"></span><button class="btn ghost hidden" id="redo" title="Dựng lại video này bằng bản AI mới nhất (không cần tải lại file)">↻ Dựng lại</button><button class="btn" id="exp" disabled>Xuất</button></div>
-  <div id="story" class="story hidden" onclick="if(!event.target.closest('.pt'))this.classList.toggle('open')"><div class="sum"></div><div class="meta"></div><div class="parts"></div><div class="qc hidden"></div></div>
+  <div id="story" class="story hidden" onclick="if(!event.target.closest('.pt'))this.classList.toggle('open')"><button class="x" type="button" aria-label="Thu gọn" onclick="event.stopPropagation();this.parentNode.classList.remove('open')">✕</button><div class="sum"></div><div class="meta"></div><div class="parts"></div><div class="qc hidden"></div></div>
   <div class="main">
     <div class="view"><hyperframes-player id="pl" controls runtime-src="/ui/hyperframe.runtime.iife.js"></hyperframes-player><div class="wait" id="wait">AI đang dựng…</div></div>
     <div class="side">
@@ -282,8 +286,10 @@ function showQC(q) {
   if (!q?.items?.length) return;
   const el = $('#story .qc'), col = q.score >= 90 ? '#6dff8a' : q.score >= 80 ? '#D1FE17' : q.score >= 70 ? '#ffd84a' : '#ff8a7a';
   el.classList.remove('hidden');
-  el.innerHTML = `<span class="sc" style="background:${col}">${q.score}/100</span><b>${esc(q.level)}</b> · chạm để xem chi tiết<ul>${q.items.map(x => `<li>${esc(x.name)}: <b>${x.got}/${x.max}</b>${x.notes.length ? ' — ' + x.notes.map(esc).join(' · ') : ''}</li>`).join('')}</ul>`;
+  el.innerHTML = `<span class="sc" style="background:${col}">${q.score}/100</span><b>${esc(q.level)}</b> · <span class="ho">chạm để xem chi tiết</span><span class="hc">chạm để thu gọn</span><ul>${q.items.map(x => `<li>${esc(x.name)}: <b>${x.got}/${x.max}</b>${x.notes.length ? ' — ' + x.notes.map(esc).join(' · ') : ''}</li>`).join('')}</ul>`;
 }
+// chạm ra ngoài thẻ → thu gọn
+document.addEventListener('click', e => { const s = $('#story'); if (s && !e.target.closest('#story')) s.classList.remove('open'); });
 function storyPart(name, t, seekT, goal) {
   const b = document.createElement('span'); b.className = 'pt'; b.innerHTML = `${esc(name)}<i>${fmtS(t || 0)}</i>`; if (goal) b.title = goal;
   if (seekT != null) b.onclick = () => { try { $('#pl').seek(seekT + 0.05); } catch {} };

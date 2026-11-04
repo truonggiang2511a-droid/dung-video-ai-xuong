@@ -30,7 +30,7 @@ nói "sân thượng" mà khung hình vẫn ở sảnh thì PHẢI chèn cảnh 
   "hook":  {"text": "TIÊU ĐỀ 2–5 TỪ", "sub": "dòng phụ ngắn hoặc rỗng", "why": "vì sao"},
   "cold_open": {"start": 118.4, "end": 121.6, "why": "câu giá gây tò mò"},
   "texts": [{"tpl": "price-red|spec-gold|key-pop|stat|list|quote", "start": 61.2, "dur": 2.4, "lead": "", "text": "CHỮ CHÍNH", "sub": "", "emoji": "money-bag", "icon": "", "why": ""}],
-  "brolls":[{"file": "b3.mp4", "start": 80.5, "dur": 2.6, "from": 0, "tpl": "whip|zoom|push|radial|fade|blur|slide", "label": "PHÒNG KHÁCH", "why": ""},
+  "brolls":[{"file": "b3.mp4", "start": 80.5, "dur": 3.4, "from": 0, "tpl": "blur|zoom|fade|whip|slide|push", "label": "PHÒNG KHÁCH", "why": ""},
             {"kind": "map", "file": "b1.mp4", "start": 17.2, "end": 29.7, "why": "nói vị trí + tiện ích"}],
   "chapters": [{"start": 40.2, "title": "VỊ TRÍ"}, {"start": 95.0, "title": "BÊN TRONG NHÀ"}],
   "missing": [{"need": "phòng thờ", "at": 168.2, "why": "chị nói phòng thờ nhưng không có cảnh"}],
@@ -91,7 +91,8 @@ Mẫu chữ:
   (vd "cây xanh", "sân thượng", "sổ hồng riêng", "Hưng Long", "dọn vào ở liền"). Con số + đơn vị máy tự tô.
 Luật:
 1. KHÔNG bịa: số, giá, tên nơi phải có NGUYÊN VĂN trong câu. Không có thì bỏ. Không ghi số điện thoại.
-2. Chữ hiện ĐÚNG lúc người nói nhắc tới: `start` = giây của cụm đó trong câu (ước theo vị trí chữ trong câu), `dur` 1,8–3 giây.
+2. Chữ hiện ĐÚNG lúc người nói nhắc tới: `start` = giây của cụm đó trong câu (ước theo vị trí chữ trong câu), `dur` 2,2–3,2 giây
+   (máy tự giữ chữ thêm ~1 s sau lời, tối thiểu ~3 s, tới sát chữ sau — khách thấy chữ ra nhanh quá).
 3. Các mục trong `texts` không chồng giờ nhau, cách nhau ≥ 0,3 giây; không đặt trong 2,5 giây đầu của câu đầu tiên được giữ (chỗ hook).
 4. MẬT ĐỘ: phải có ĐỦ khoảng `target.texts` mục (≈ 1 mục mỗi 4–6 giây video sau khi cắt) — video ngắn mà ít chữ là video nhạt.
    Ưu tiên giá > con số > ý chính; câu nào có thông tin đáng nhớ (vị trí, tiện ích, công năng, pháp lý, ưu điểm) đều nên có chữ.
@@ -99,7 +100,8 @@ Luật:
    - Câu nói về phòng / tầng / không gian nào thì dùng ĐÚNG đoạn cảnh thấy thứ đó ("lầu 1, phòng ngủ" ↔ đoạn thấy phòng ngủ;
      "sân thượng" ↔ đoạn thấy sân thượng; "đường rộng, cây xanh" ↔ đoạn thấy đường / cây). `from` = `from` của đoạn đó.
    - Cảnh dài có nhiều `parts` → được dùng NHIỀU đoạn khác nhau của cùng 1 file ở các câu khác nhau.
-   - Khoảng mỗi `target.brolls_every_s` giây có 1 cảnh phụ ở phần giữa video; mỗi lần 1,5–3 giây, `from` + `dur` ≤ `to` của đoạn.
+   - Khoảng mỗi `target.brolls_every_s` giây có 1 cảnh phụ ở phần giữa video; mỗi lần 2,5–4 giây, `from` + `dur` ≤ `to` của đoạn
+     (cảnh phụ đã được QUAY CHẬM sẵn — `dur`/`parts` tính theo file đã chậm; máy kéo dài theo phong cách, BĐS 3,4–4,5 s).
    - Không đặt ở câu đầu tiên và câu cuối cùng; không 2 cảnh chồng giờ; đoạn không hợp câu nào thì bỏ qua, KHÔNG ép.
 5b. BẢN ĐỒ (đoạn cảnh có `map: true`): người nói về vị trí / tiện ích / khoảng cách bao lâu thì bản đồ hiện bấy lâu, KHÔNG cắt ngắn
    2–3 s. Ghi 1 mục `{"kind":"map","file":"…","start": giây đầu câu đầu tiên nói vị trí, "end": giây cuối câu cuối cùng nói vị trí}`
@@ -124,8 +126,9 @@ Lời nói nhắc tới không gian / sản phẩm / hành động quan trọng 
    Video ngắn / 1 ý → `[]`. Máy tự đánh số "01, 02…" và thêm vệt sáng chuyển phần.
 11. NHÃN CẢNH PHỤ `label`: cảnh phụ cho thấy 1 nơi / món / sản phẩm cụ thể → `label` 1–3 từ ("PHÒNG NGỦ MASTER", "SÂN THƯỢNG",
    "BẾP MỞ", "THÀNH PHẨM"). Lấy theo `parts[].thay` VÀ lời nói, không bịa. Không chắc → bỏ trống.
-12. ĐỔI KIỂU VÀO CẢNH PHỤ (`tpl`): đừng dùng 1 kiểu cho cả video. `zoom` = vào mạnh (giá, điểm nhấn), `push` = lên tầng / đi tiếp,
-   `radial` = khoe không gian đẹp, `whip`/`slide` = lướt nhanh, `fade`/`blur` = nhẹ nhàng (cảnh chậm, cuối video). Bản đồ luôn `fade`.
+12. ĐỔI KIỂU VÀO CẢNH PHỤ (`tpl`): đừng dùng 1 kiểu cho cả video. `blur` = mờ dần vào (mặc định, mượt), `zoom` = đẩy nhẹ vào (điểm nhấn),
+   `fade` = hoà cảnh (cảnh chậm, cuối video). `whip`/`slide`/`push` (lướt nhanh) CHỈ cho bán hàng / thể thao / vlog — BĐS, doanh nghiệp,
+   làm đẹp, du lịch KHÔNG dùng (khách chê giật). Máy chỉ nhận kiểu có trong phong cách đang dùng. Bản đồ luôn `fade`.
 13. NGƯỜI NÓI `speaker`: chỉ khi người nói TỰ GIỚI THIỆU tên ("em là Hương, bên Nhà Xinh") → `name` = tên đúng như nói,
    `role` = vai/đơn vị ngắn. Không nói tên → để trống. Không bịa.
 14. KÊNH `channel` + `cta_style`: người nói nhắc tên kênh / thương hiệu ("đăng ký kênh Nhà Xinh") → `channel` = tên đó,
