@@ -1,13 +1,14 @@
 // Dựng lại timeline của 1 job THẬT (state.json + plan.json lấy từ laptop) bằng code hiện tại — không cần file video.
-// node test/sim-job.mjs <thư mục job thật> <thư mục ra> [slow]  (slow = giả lập cảnh phụ quay chậm k lần, vd 1.6667 cho 50 khung/s)
+// node test/sim-job.mjs <thư mục job thật> <thư mục ra> [slow] [faces.json]  (slow = giả lập cảnh phụ quay chậm k lần, vd 1.6667 cho 50 khung/s;
+// faces.json = mặt người nói tìm bằng lib/faces.mjs trên video chính, giây gốc)
 import fs from 'node:fs';
 import path from 'node:path';
-import { finalize, writeComposition } from '../lib/pipeline.mjs';
-const [src, out, slow] = process.argv.slice(2);
+import { finalize, writeComposition, faceHits } from '../lib/pipeline.mjs';
+const [src, out, slow, facesFile] = process.argv.slice(2);
 const st = JSON.parse(fs.readFileSync(path.join(src, 'state.json'), 'utf8'));
 const plan = JSON.parse(fs.readFileSync(path.join(src, 'plan.json'), 'utf8'));
 fs.mkdirSync(out, { recursive: true });
-const job = { ...st, dir: out, styleInfo: null };
+const job = { ...st, dir: out, styleInfo: null, ...(facesFile ? { faces: JSON.parse(fs.readFileSync(facesFile, 'utf8')) } : {}) };
 const k = +slow || 1;
 if (k > 1) {
   for (const m of job.media) if (!m.main) { m.slow = k; m.dur = Math.round(m.dur * k * 100) / 100; m.parts = (m.parts || []).map(p => ({ ...p, from: p.from * k, to: p.to * k })); }
@@ -27,3 +28,8 @@ console.log('âm thanh', C('sfx').length, `(${(C('sfx').length / (T.duration / 6
 const tt = C('text').sort((a, b) => a.start - b.start); let ov = 0;
 for (let i = 1; i < tt.length; i++) if (tt[i].start < tt[i - 1].start + tt[i - 1].dur - 0.01) ov++;
 console.log('chữ chồng nhau', ov);
+if (job.faces) {
+  const moved = T.clips.filter(c => c.props?.topAuto).map(c => `${c.id}(${c.tpl || c.type}) → ${Math.round(c.props.top * 100)}%`);
+  console.log('né mặt: dời', moved.length, moved.join(' · ') || '');
+  const h = faceHits(T, job); console.log('còn che mặt', h.length, JSON.stringify(h));
+}

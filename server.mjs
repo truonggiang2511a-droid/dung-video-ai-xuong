@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import { silenceCuts, prepare, transcribe, analyze, plan, finalize, opsForCursor, writeComposition, chat, render, APP_URL } from './lib/pipeline.mjs';
 import { aiMode } from './lib/ai.mjs';
 import { tagBrolls, tagMain } from './lib/vision.mjs';
+import { findFaces, warmFaces } from './lib/faces.mjs';
 import { STYLES, INDUSTRIES, IND } from './lib/styles.mjs';
 import { qcTimeline, qcExport } from './lib/qc.mjs';
 import { queueInfo } from './lib/queue.mjs';
@@ -62,11 +63,14 @@ async function pipeline(j) {
     await prepare(j, s => step(j, s), live);
     // AI xem video chính (người nói đang ở đâu, đang khoe gì) chạy song song với chép lời
     const mainTag = tagMain(j, s => step(j, s)).catch(e => step(j, 'AI xem video chính lỗi: ' + e.message));
+    // tìm mặt người nói (chữ / nút / nhãn né mặt) — song song, lỗi thì dựng như cũ
+    const faceP = findFaces(j, s => step(j, s)).catch(e => step(j, 'Tìm mặt lỗi: ' + e.message));
     await transcribe(j, s => step(j, s), live);
     await analyze(j, s => step(j, s), live);
     if (j.brollsReady) await j.brollsReady;
     await tagBrolls(j, s => step(j, s), live).catch(e => step(j, 'AI nhìn cảnh phụ lỗi: ' + e.message));
     await mainTag;
+    await faceP;
     step(j, 'AI đọc hiểu video: tóm ý, viết kịch bản dựng, tìm đoạn nói hỏng, chọn chữ, ghép cảnh phụ theo hình…');
     const p = await plan(j, s => step(j, s), live);
     const { T, removed } = finalize(j, p);
@@ -200,4 +204,5 @@ http.createServer(async (req, res) => {
   console.log(`\nMáy dựng Dựng Video AI đang chạy: http://localhost:${PORT}`);
   console.log(`Mã truy cập (dán vào trang khi được hỏi): ${KEY}`);
   console.log(`AI: ${aiMode()}${aiMode() === 'claude' ? ' (Claude Code — chỉ dùng thử nội bộ)' : ''} · chép lời qua ${APP_URL}\n`);
+  warmFaces(s => console.log(s));
 });

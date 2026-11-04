@@ -66,6 +66,16 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
   Nhãn luôn 1 dòng (`--lfs` tự thu nhỏ theo độ dài). Đổi vị trí bất kỳ khối chữ nào → chạy `node test/overlap.cjs file://…/index.html` (đo khung chữ
   thật mỗi 0,25 s, báo ❌ cặp đè). 4/11: bắt đúng “NHẮN TIN XEM NHÀ NGAY” đè phụ đề “trồng cây xanh” + chương “LẦU 2 VÀ SÂN THƯỢNG” 2 dòng đè phụ đề.
 
+## LUẬT CỨNG: CHỮ / NÚT / NHÃN KHÔNG CHE MẶT NGƯỜI NÓI (Giang 4/11 20:21)
+- `lib/faces.mjs` tìm mặt bằng **YuNet** (`kit/yunet.onnx`, MIT — `kit/GHI-CONG-YUNET.txt`) trên khung khoá video chính (1 khung/s, khung dọc 640 chia 2 ô 640×640
+  để thấy mặt xa ~20 px) → `job.faces` (giây gốc, nhớ `faces-v1`). Chạy bằng `onnxruntime-node@1.21.1` trong thư mục HyperFrames tự cài cho tách nền
+  (`~/.cache/hyperframes/optional/…`); chưa có thì máy dựng tự `npm install` 1 lần lúc mở (`warmFaces`); cài không được → dựng như cũ + QC ghi “chưa kiểm”.
+- `faceAvoid(T, job)` (cuối `buildTimeline` + sau mỗi lần chat): mặt → giờ timeline qua từng đoạn video chính (tính zoom, bỏ lúc cảnh phụ che), khối nào
+  (nút kết, theo dõi, nhãn, hook, chữ điểm nhấn) trúng mặt (trán → cằm, được chạm tóc) thì dời sang chỗ trống: vùng dự phòng → trên mặt → dưới mặt →
+  chữ to thu 18 % (`props.zoom`), KHÔNG đè khối khác (`busy`). `props.top`/`topAuto` (gen: `tp()`); khách tự đặt vị trí thì giữ. `faceHits` → QC bố cục.
+- Dữ liệu thật: mặt Giang quay vừa/xa nằm 39–58 % chiều cao (Nhà Xinh 190/225 khung, zRRz 217/227) = đúng vùng nút kết 47 % / nhãn 49 % → zRRz dời
+  nút kết 47 → 26 %, 3 nhãn chương, 1 chữ; còn che 0; `overlap.cjs` 0 đè. Tìm mặt video 3:46: 10 s (máy ảo 2 nhân).
+
 ## LUẬT CỨNG: không để cắt thoại sai lặp lại (Giang yêu cầu 4/11 15:33)
 - Mỗi lần Giang báo **cắt sai** → (1) lấy `state.json` của job lỗi trên laptop, (2) sửa luật, (3) lưu thành bài kiểm tra:
   `node test/cut-regress.mjs --add <state.json> <ten-loi> "<ghi chú>" "<câu phải bỏ, vd 5-11>"` (lưu lời chép + đáp án vào `test/loi-cat/`).
@@ -172,4 +182,7 @@ Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. L�
   `bLen` của phong cách (BĐS 3,4–4,5 s, trước 2,3–2,9 s), dừng trước cảnh kế 0,3 s để không mất cảnh nào. (4) Chữ điểm nhấn `tMin` ≥ 3 s, giữ thêm ~1 s,
   tới sát chữ sau (dữ liệu thật 2,0–2,6 → 2,7–4,0 s, 0 chồng nhau, `overlap.cjs` 0 đè); hook 3 s. (5) Thẻ “AI hiểu video”: nút ✕, chạm ra ngoài thu gọn,
   mở tối đa 55 % màn hình (cuộn trong thẻ) — trước mở ra che hết video. Kiểm job thật không cần video: `node test/sim-job.mjs <job> <ra> 1.6667`.
+- 2026-11-04 20:21 (Giang, ảnh: nút “NHẮN TIN XEM NHÀ NGAY” che mặt chị dẫn ở sân thượng): video quay xa → mặt ở giữa khung (49 %) đúng chỗ nút kết 47 %.
+  Vùng cố định không đủ — phải biết mặt ở đâu → YuNet + `faceAvoid` (mục LUẬT CỨNG ở trên). Raw điện thoại khung khoá 5 s/lần (46 khung / 228 s) thì
+  sót đúng lúc nút kết hiện → tìm trên file ĐÃ ĐỔI (khung khoá 1 s). YuNet bản này cố định 640×640 (ORT báo lỗi khi đưa 320×576).
 - HyperFrames có gói trả phí "HyperFrames Pro" (templates, style-sampling) và bật telemetry mặc định → `npx hyperframes telemetry disable`.
