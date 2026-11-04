@@ -13,9 +13,11 @@ trong đoạn đó), danh sách `emojis` (khoá: nghĩa) và `icons`, `target` (
 ```json
 {
   "drop":  [{"from": 3, "to": 7, "why": "noi_lai|ekip|lap", "note": "1 câu giải thích ngắn"}],
+  "fix":   [{"sai": "Cần Dũ", "dung": "Cần Giuộc"}],
   "hook":  {"text": "TIÊU ĐỀ 2–5 TỪ", "sub": "dòng phụ ngắn hoặc rỗng", "why": "vì sao"},
   "texts": [{"tpl": "price-red|spec-gold|key-pop", "start": 61.2, "dur": 2.4, "lead": "", "text": "CHỮ CHÍNH", "sub": "", "emoji": "money-bag", "icon": "", "why": ""}],
-  "brolls":[{"file": "b3.mp4", "start": 80.5, "dur": 2.6, "from": 0, "tpl": "whip|fade", "why": ""}],
+  "brolls":[{"file": "b3.mp4", "start": 80.5, "dur": 2.6, "from": 0, "tpl": "whip|fade", "why": ""},
+            {"kind": "map", "file": "b1.mp4", "start": 17.2, "end": 29.7, "why": "nói vị trí + tiện ích"}],
   "cta": "NHẮN TIN XEM NHÀ NGAY"
 }
 ```
@@ -29,6 +31,11 @@ Chỉ ra các câu PHẢI BỎ (`from`/`to` = số câu, gồm cả 2 đầu, kh
 - `lap`: câu chào / kết lặp liền nhau ("Xin chào! Xin chào!").
 KHÔNG bỏ: câu nội dung chỉ nói 1 lần; câu mở đầu dù sau đó nhắc lại số liệu; phần tóm tắt cuối; giá / thông tin chỉ có ở 1 chỗ.
 Không chắc thì KHÔNG bỏ. Máy sẽ kiểm lại (đoạn bỏ có số mà phần giữ không có → không bỏ).
+
+### 1a'. Sửa chính tả lời chép → `fix` (cho phụ đề đúng)
+Máy chép lời hay sai TÊN RIÊNG và từ gần âm. Theo ngữ cảnh, liệt kê `"fix": [{"sai": "Cần Dũ", "dung": "Cần Giuộc"}, {"sai": "trợ Bình Chánh", "dung": "chợ Bình Chánh"}]`
+(`sai` = chuỗi đúng y như trong `sentences`). Chỉ sửa khi CHẮC (địa danh, tên dự án, thuật ngữ ngành, tên kênh); KHÔNG sửa số liệu.
+Chữ điểm nhấn luôn dùng bản đã sửa.
 
 ### 1b. Chữ, cảnh phụ, kết (CHỈ dùng câu KHÔNG bị bỏ)
 Mẫu chữ:
@@ -48,6 +55,10 @@ Luật:
    - Cảnh dài có nhiều `parts` → được dùng NHIỀU đoạn khác nhau của cùng 1 file ở các câu khác nhau.
    - Khoảng mỗi `target.brolls_every_s` giây có 1 cảnh phụ ở phần giữa video; mỗi lần 1,5–3 giây, `from` + `dur` ≤ `to` của đoạn.
    - Không đặt ở câu đầu tiên và câu cuối cùng; không 2 cảnh chồng giờ; đoạn không hợp câu nào thì bỏ qua, KHÔNG ép.
+5b. BẢN ĐỒ (đoạn cảnh có `map: true`): người nói về vị trí / tiện ích / khoảng cách bao lâu thì bản đồ hiện bấy lâu, KHÔNG cắt ngắn
+   2–3 s. Ghi 1 mục `{"kind":"map","file":"…","start": giây đầu câu đầu tiên nói vị trí, "end": giây cuối câu cuối cùng nói vị trí}`
+   (các câu vị trí liền nhau gộp thành 1 khoảng; máy tự nối các đoạn bản đồ liền nhau cho đủ dài). Chữ điểm nhấn vị trí
+   (km, giáp ranh, cao tốc, chợ…) vẫn đặt bình thường — chữ hiện đè lên bản đồ.
 6. Mỗi chữ ≤ 1 hình đi kèm: ưu tiên `emoji` (chọn khoá trong `emojis` đúng NGHĨA với chữ: giá → money-bag, phòng ngủ → bed,
    cây xanh → evergreen-tree, vị trí → round-pushpin, cao tốc → motorway, sổ hồng → page-facing-up, rẻ/hot → fire…);
    không có emoji hợp thì dùng `icon` trong `icons`; không hợp gì thì để rỗng.

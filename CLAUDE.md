@@ -67,4 +67,9 @@ Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. L�
   Thử trên Aroll Nhà Xinh 8 s: tách nền 3 s mất 92 s (2 nhân, 1,4 khung/giây), chữ “KHU” nằm sau đầu chị, xuất MP4 OK (90 s).
   Chat chạy NỀN (`j.chat`, trang hỏi lại) vì đường hầm cắt yêu cầu > 100 s. Xem nhanh trên iPhone: Safari không phát WebM trong suốt → bản
   xem nhanh có thể thấy chữ trước người, MP4 xuất vẫn đúng.
+- 2026-11-04 14:45 (Giang: bản đồ chỉ chèn 1 đoạn ngắn, không khớp lời): cảnh phụ thường bị giới hạn 1,5–3 s. Làm: `vision` đánh dấu đoạn
+  `map` (bản đồ / vệ tinh / lộ trình); `mapPlan` = khoảng AI ghi `{"kind":"map", start, end}` hoặc tự tìm các câu liền nhau khớp `LOC_RE`
+  (giáp ranh, cách … km, cao tốc, chợ, thuộc xã/huyện…) → nối các đoạn bản đồ liền nhau của cùng file cho đủ dài (≤ 40 s), hiện suốt lúc nói.
+  Dữ liệu thật: bản đồ 12,5 s trùng đúng 2 câu “Phước Lý Cần Giuộc… giáp ranh Bình Chánh… cao tốc Bến Lức – Long Thành… cách chợ Bình Chánh 2 km”.
+  Kèm: AI trả `fix` sửa chính tả tên riêng trong phụ đề (“Cần Dũ” → “Cần Giuộc”, “trợ” → “chợ”) — `applyFixes` thay chuỗi chữ liên tiếp, giữ giờ.
 - HyperFrames có gói trả phí "HyperFrames Pro" (templates, style-sampling) và bật telemetry mặc định → `npx hyperframes telemetry disable`.
