@@ -33,6 +33,23 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
 `XUONG_AI=local XUONG_KEY=test123 node server.mjs` rồi `SIZE=1440x900 EXPORT=1 node test/ui.cjs` (và `SIZE=390x844`).
 Đường Claude kiểm bằng CLI giả `test/fake-claude` (đặt vào PATH) — KHÔNG phải AI thật.
 
+## MASTER EDITING RULES V1.0 (Giang 4/11 17:05 — bản gốc `docs/MASTER-RULES-V1.md`, phần 2 luật theo ngành)
+- **`lib/styles.mjs`**: 20 ngành (`INDUSTRIES`: id, tên, phong cách, CTA, genre cũ) → **10 phong cách** (`STYLES`) với THÔNG SỐ THẬT: `pace`
+  (punchGap, punchKey, textEvery, brollEvery), `punch` jump|smooth|none, `pauseKeep` (khoảng nghỉ giữ lại), `coldOpen` (sự kiện/tài liệu/giáo dục giữ
+  trình tự), `brollVol` (tiếng môi trường cảnh phụ), `sfx` hi|mid|lo|min, `transitions`, `label`, `anim` pop|stamp|slide|fade, `subs` {look stroke|box|clean,
+  scale}, `fonts` {head, big}, `grade` {sat,bri,con,warm}, `fx` {leak, flash}; `RULES` = luật từng nhóm ngành gửi AI (`brief.industry_rules`).
+  `resolveStyle(job,p)`: khách chọn > AI chọn (`understand.industry/style`) > theo ngành > genre cũ > bds. BĐS giữ đúng màu Giang chốt (1,15/1,10/1,05).
+- Gen: `#root.st-<phong cách>` → kiểu chữ điểm nhấn riêng (bán hàng: ô màu nghiêng · doanh nghiệp: gạch chân · giáo dục/phỏng vấn: ô tối · cinematic/
+  làm đẹp/ẩm thực: cụm nhấn viết tay · vlog: nhãn dán), `--f-head/--f-big`, phụ đề `look-*`, punch `smooth` = đẩy 0,9 s +6 %. Mẫu mới: **`list`** (✓ / bước),
+  **`stat`** (số chạy 0 → giá trị, GSAP onUpdate — chạy đúng khi tua), **`quote`** (trích dẫn). Đo trên căn LJN: giật zoom bán hàng 37 · BĐS 24 (mượt) ·
+  doanh nghiệp 3 · cinematic 0; âm thanh nhấn 44–47 vs 2–3; 7 phong cách đều 0 chỗ đè chữ (`test/overlap.cjs`).
+- Cảnh phụ giữ tiếng (`broll-amb.mp4` trong bộ nhớ, aac 96k) — chỉ phát khi `T.brollVol > 0`.
+- **Thiếu cảnh quay** `plan.missing` + `missingFootage` (BĐS: không gian người nói nhắc mà không cảnh nào cho thấy) → thẻ “AI hiểu video”.
+- **`lib/qc.mjs`** chấm 100 điểm đúng 10 mục Master Rules VIII, MÁY ĐO THẬT (im lặng sót, khoảng không lời, đoạn không đổi, 2 chữ lớn cùng lúc, cảnh phụ dùng/khách gửi,
+  lặp đoạn, phụ đề phủ lời, chữ tô 1 tiếng lẻ, LUFS/đỉnh giọng, mật độ SFX, màu quá mức) → `j.qc` sau dựng + sau chat; sau xuất `qcExport` đo out.mp4
+  (thời lượng, có tiếng, `blackdetect`, `freezedetect`, LUFS). Trang: “85/100 · Tốt”, chạm thẻ xem từng mục. Nhạc nền: ghi “chưa có” (chờ Giang chọn nguồn có bản quyền).
+- Chat: `{"op":"style","style":"cinematic"}` dựng lại timeline theo phong cách mới từ plan.json (không gọi AI). Trang tạo: ô chọn ngành (Tự động + 20) + phong cách (Tự động + 10), `GET /api/styles`.
+
 ## CHAT SỬA VIDEO — AI làm được như editor (Giang 4/11 16:48: “yêu cầu gì AI cũng không hiểu”)
 - Trước đây AI chat chỉ thấy danh sách clip (KHÔNG có lời thoại, KHÔNG có cảnh phụ) + 3 thao tác → 3/4 lần trả `{"ops":[]}` → trang báo “chưa hiểu”.
 - Giờ `chat.json` có `transcript` (lời theo GIỜ TIMELINE), `brolls` (file, tên, `parts[].thay`), `settings`; AI trả `{"say","ops"}` — `say` LUÔN có

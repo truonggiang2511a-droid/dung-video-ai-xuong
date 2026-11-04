@@ -26,6 +26,7 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.5px}h1 span{color:var(--mut)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--card2);color:var(--tx);padding:9px 14px;border-radius:999px;font-size:14px}
 .chip.on{background:var(--acc);color:var(--ink);font-weight:600}
+.sel{width:100%;background:var(--card2);color:var(--tx);border:1px solid #2c2f35;border-radius:12px;padding:12px 14px;font:inherit;font-size:15px;appearance:auto}
 .pick{display:block;background:var(--card);border:1.5px dashed #3a3d42;border-radius:var(--rc);padding:18px;text-align:center;color:var(--mut)}
 .pick b{color:var(--tx);display:block;font-weight:600;margin-bottom:2px}
 .pick input{display:none}
@@ -41,6 +42,9 @@ h1{font-size:26px;font-weight:600;letter-spacing:-.5px}h1 span{color:var(--mut)}
 /* KỊCH BẢN AI: AI đọc hiểu video → tóm ý + các phần dựng */
 .story{margin:8px 12px 0;background:var(--card);border:1px solid #26292e;border-radius:12px;padding:9px 12px;font-size:13px;line-height:1.4}
 .story .sum{color:#e8e9ea}.story .sum b{color:var(--acc);font-weight:600}.story .meta{color:var(--mut);font-size:12px;margin-top:3px}
+.story .miss{color:#ffb86b;margin-top:4px}
+.story .qc{margin-top:7px;font-size:12px;color:var(--mut)}.story .qc b{font-size:14px}.story .qc .sc{display:inline-block;padding:2px 9px;border-radius:999px;margin-right:6px;color:#14161a;font-weight:700}
+.story .qc ul{margin:6px 0 0;padding-left:16px;display:none}.story.open .qc ul{display:block}.story .qc li{margin:2px 0}
 .story .parts{display:flex;gap:6px;overflow-x:auto;margin-top:7px;padding-bottom:2px}
 .story .pt{flex:none;background:#1b1d21;border:1px solid #33363c;border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;color:#fff;animation:ptin .35s ease}
 .story .pt i{font-style:normal;color:var(--mut);margin-left:5px}.story .pt:hover{border-color:var(--acc)}
@@ -114,7 +118,10 @@ hyperframes-player{height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;
   <h1>Dựng Video AI <span>· AI dựng video</span></h1>
   <p class="note">Chọn ngành và video, AI tự cắt, thêm chữ, cảnh phụ, âm thanh — bạn xem AI dựng trực tiếp trên timeline rồi sửa theo ý.</p>
   <div class="lbl">Ngành nghề</div>
-  <div class="chips" id="genres"></div>
+  <div class="chips hidden" id="genres"></div>
+  <select id="ind" class="sel"><option value="">✨ Tự động — AI tự nhận diện ngành</option></select>
+  <div class="lbl">Phong cách dựng</div>
+  <select id="sty" class="sel"><option value="">✨ Tự động — theo ngành của video</option></select>
   <div class="lbl">Video chính (người nói / A-roll)</div>
   <label class="pick"><b>Chọn video chính</b>MP4, MOV từ điện thoại hoặc máy tính<input type="file" id="fMain" accept="video/*"></label>
   <div class="lbl">Cảnh phụ (B-roll) — không bắt buộc</div>
@@ -125,7 +132,7 @@ hyperframes-player{height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;
 
 <section id="ed" class="hidden">
   <div class="top"><button class="btn ghost" id="back">‹ Mới</button><div class="t" id="title">Đang dựng…</div><span class="ai" id="aiName"></span><button class="btn ghost hidden" id="redo" title="Dựng lại video này bằng bản AI mới nhất (không cần tải lại file)">↻ Dựng lại</button><button class="btn" id="exp" disabled>Xuất</button></div>
-  <div id="story" class="story hidden" onclick="if(!event.target.closest('.pt'))this.classList.toggle('open')"><div class="sum"></div><div class="meta"></div><div class="parts"></div></div>
+  <div id="story" class="story hidden" onclick="if(!event.target.closest('.pt'))this.classList.toggle('open')"><div class="sum"></div><div class="meta"></div><div class="parts"></div><div class="qc hidden"></div></div>
   <div class="main">
     <div class="view"><hyperframes-player id="pl" controls runtime-src="/ui/hyperframe.runtime.iife.js"></hyperframes-player><div class="wait" id="wait">AI đang dựng…</div></div>
     <div class="side">
@@ -163,6 +170,15 @@ async function api(p, opt = {}) {
 
 // ---------- màn tải lên ----------
 $('#genres').innerHTML = GENRES.map(([k, n]) => `<button class="chip ${k === genre ? 'on' : ''}" data-g="${k}">${n}</button>`).join('');
+// 20 ngành + 10 phong cách (Master Rules) — lấy từ máy dựng
+let industry = localStorage.getItem('xuong.ind') ?? 'bat-dong-san', styleSel = localStorage.getItem('xuong.sty') || '';
+fetch('/api/styles').then(r => r.json()).then(d => {
+  $('#ind').insertAdjacentHTML('beforeend', d.industries.map(x => `<option value="${x.id}">${x.name}</option>`).join(''));
+  $('#sty').insertAdjacentHTML('beforeend', d.styles.map(x => `<option value="${x.id}">${x.name}</option>`).join(''));
+  $('#ind').value = industry; $('#sty').value = styleSel;
+}).catch(() => {});
+$('#ind').onchange = e => { industry = e.target.value; localStorage.setItem('xuong.ind', industry); };
+$('#sty').onchange = e => { styleSel = e.target.value; localStorage.setItem('xuong.sty', styleSel); };
 $('#genres').onclick = e => { const g = e.target.dataset.g; if (!g) return; genre = g; localStorage.setItem('xuong.genre', g); document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.g === g)); };
 let fMain = null, fB = [];
 const fmt = b => b > 1e9 ? (b / 1e9).toFixed(2) + ' GB' : (b / 1e6).toFixed(1) + ' MB';
@@ -187,11 +203,11 @@ async function upload(id, f, i, main) {
 $('#go').onclick = async () => {
   $('#go').disabled = true;
   try {
-    const { id } = await api('jobs', { method: 'POST', body: JSON.stringify({ genre }) });
+    const { id } = await api('jobs', { method: 'POST', body: JSON.stringify({ industry, style: styleSel }) });
     $('#go').textContent = 'Đang gửi video…';
     await upload(id, fMain, 0, true);
     for (let i = 0; i < fB.length; i++) await upload(id, fB[i], i + 1, false);
-    await api(`jobs/${id}/start`, { method: 'POST', body: JSON.stringify({ genre }) });
+    await api(`jobs/${id}/start`, { method: 'POST', body: JSON.stringify({}) });
     location.hash = id;
     openJob(id);
   } catch (e) { alert(e.message); $('#go').disabled = false; $('#go').textContent = 'AI dựng video'; }
@@ -231,7 +247,8 @@ async function openJob(id) {
   if (job.status === 'error') { idle('⚠ ' + job.error); $('#wait').textContent = job.error; return; }
   T = job.timeline; version = job.version || 0;
   if (job.story?.summary || job.story?.parts?.length) story(job.story, job.story.parts || []);
-  $('#title').textContent = `${GENRES.find(g => g[0] === job.genre)?.[1] || ''} · ${T.duration.toFixed(1)} s`;
+  showQC(job.qc);
+  $('#title').textContent = `${job.styleInfo?.industryName || GENRES.find(g => g[0] === job.genre)?.[1] || ''} · ${T.duration.toFixed(1)} s`;
   if (live.on && live.cuts) { // ghép các đoạn giữ lại: vạch cắt mờ đi rồi timeline co lại
     say(`Ghép các đoạn đã giữ lại: ${fmtT(live.D)} → ${fmtT(T.duration)}`);
     document.querySelectorAll('.cutm').forEach(e => e.classList.add('gone'));
@@ -256,8 +273,16 @@ const fmtS = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2
 function story(u, parts) {
   const el = $('#story'); el.classList.remove('hidden');
   if (u) { el.querySelector('.sum').innerHTML = `<b>AI hiểu video:</b> ${esc(u.summary || '')}`;
-    el.querySelector('.meta').innerHTML = [u.audience && `Người xem: ${esc(u.audience)}`, u.goal && `Mục tiêu: ${esc(u.goal)}`, u.best && `Điểm đắt: ${esc(u.best)}`].filter(Boolean).join(' · '); }
+    el.querySelector('.meta').innerHTML = [u.industryName && `Ngành: ${esc(u.industryName)}`, u.styleName && `Phong cách: ${esc(u.styleName)}`, u.audience && `Người xem: ${esc(u.audience)}`, u.goal && `Mục tiêu: ${esc(u.goal)}`, u.best && `Điểm đắt: ${esc(u.best)}`].filter(Boolean).join(' · ')
+      + (u.missing?.length ? `<div class="miss">⚠ Thiếu cảnh quay: ${u.missing.map(m => esc(m.need) + (m.at != null ? ` (${fmtS(m.at)})` : '')).join(', ')} — quay thêm để video đầy đủ hơn</div>` : ''); }
   if (parts) { el.querySelector('.parts').innerHTML = ''; parts.forEach(x => storyPart(x.part, x.tl, x.tl, x.goal)); }
+}
+// BẢNG ĐIỂM CHẤT LƯỢNG (Master Rules VIII) — chạm thẻ để xem từng mục + lỗi máy đo được
+function showQC(q) {
+  if (!q?.items?.length) return;
+  const el = $('#story .qc'), col = q.score >= 90 ? '#6dff8a' : q.score >= 80 ? '#D1FE17' : q.score >= 70 ? '#ffd84a' : '#ff8a7a';
+  el.classList.remove('hidden');
+  el.innerHTML = `<span class="sc" style="background:${col}">${q.score}/100</span><b>${esc(q.level)}</b> · chạm để xem chi tiết<ul>${q.items.map(x => `<li>${esc(x.name)}: <b>${x.got}/${x.max}</b>${x.notes.length ? ' — ' + x.notes.map(esc).join(' · ') : ''}</li>`).join('')}</ul>`;
 }
 function storyPart(name, t, seekT, goal) {
   const b = document.createElement('span'); b.className = 'pt'; b.innerHTML = `${esc(name)}<i>${fmtS(t || 0)}</i>`; if (goal) b.title = goal;
@@ -493,6 +518,7 @@ async function sendChat() {
     loadPlayer();
     // điện thoại không có ô nhật ký → câu AI trả lời hiện ở thanh trạng thái
     idle(r.ops.length ? `${aiSay || `Đã sửa ${r.ops.length} chỗ.`} Xem lại rồi bấm <b>Xuất</b>.` : (aiSay || 'Không có thay đổi.'));
+    if (r.ops.length) sleep(3000).then(() => api('jobs/' + job.id)).then(j => showQC(j.qc)).catch(() => {});
   } catch (e) { idle('⚠ ' + e.message); log('⚠ ' + e.message, 'ai'); }
   $('#send').disabled = false;
 }
@@ -507,10 +533,12 @@ $('#exp').onclick = async () => {
     const j = await api('jobs/' + job.id);
     $('#mbar').style.width = (j.render?.pct || 0) + '%';
     $('#mtx').textContent = j.render?.queue > 0 ? `Đang xếp hàng xuất video: thứ ${j.render.queue}…` : `Đang xuất video MP4… ${j.render?.pct || 0}%`;
-    if (j.render?.status === 'done') return showDone(j.render);
+    if (j.render?.status === 'done') { showDone(j.render); refreshQC(); return; }
     if (j.render?.status === 'error') { $('#mtx').textContent = '⚠ ' + j.render.error; $('#mact').innerHTML = '<button class="btn ghost" onclick="$(\'#modal\').classList.add(\'hidden\')">Đóng</button>'; return; }
   }
 };
+// điểm cập nhật sau khi máy đo file MP4 (khung đen, hình đứng, âm lượng) / sau khi sửa chat
+async function refreshQC() { for (let k = 0; k < 8; k++) { await sleep(2500); try { const j = await api('jobs/' + job.id); showQC(j.qc); if (j.qc?.items?.find(x => x.k === 'export')?.got > 0) break; } catch {} } }
 function showDone(r) {
   $('#modal').classList.remove('hidden');
   $('#mbar').style.width = '100%';

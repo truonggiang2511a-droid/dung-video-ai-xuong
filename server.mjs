@@ -7,6 +7,8 @@ import crypto from 'node:crypto';
 import { silenceCuts, prepare, transcribe, analyze, plan, finalize, opsForCursor, writeComposition, chat, render, APP_URL } from './lib/pipeline.mjs';
 import { aiMode } from './lib/ai.mjs';
 import { tagBrolls, tagMain } from './lib/vision.mjs';
+import { STYLES, INDUSTRIES, IND } from './lib/styles.mjs';
+import { qcTimeline, qcExport } from './lib/qc.mjs';
 import { queueInfo } from './lib/queue.mjs';
 
 const ROOT = import.meta.dirname;
@@ -68,11 +70,14 @@ async function pipeline(j) {
     step(j, 'AI đọc hiểu video: tóm ý, viết kịch bản dựng, tìm đoạn nói hỏng, chọn chữ, ghép cảnh phụ theo hình…');
     const p = await plan(j, s => step(j, s), live);
     const { T, removed } = finalize(j, p);
+    // KIỂM DUYỆT 100 điểm (Master Rules VIII) — máy đo thật trên timeline; mục “xuất” chấm sau khi có MP4
+    j.qc = await qcTimeline(j, T, p).catch(e => ({ score: 0, level: 'Lỗi kiểm duyệt', items: [], error: e.message }));
     fs.writeFileSync(path.join(j.dir, 'timeline.json'), JSON.stringify(T, null, 2));
     writeComposition(j);
     live({ phase: 'done', drops: j.drops, cuts: j.cuts, final: true });
     const nd = j.drops.length;
     step(j, `Cắt bỏ ${Math.round(removed)} s (${j.cuts.length} chỗ${nd ? `, gồm ${nd} đoạn nói hỏng / nói với người quay` : ''}) → video còn ${Math.round(T.duration)} s`);
+    if (j.qc?.items?.length) step(j, `Kiểm duyệt chất lượng: ${j.qc.score}/100 · ${j.qc.level}`);
     j.timeline = T;
     j.ops = opsForCursor(T);
     j.status = 'done';
@@ -90,6 +95,7 @@ http.createServer(async (req, res) => {
   try {
     if (p === '/' || p === '/index.html') return serveFile(req, res, path.join(ROOT, 'ui', 'index.html'));
     if (p.startsWith('/ui/')) return serveFile(req, res, path.join(ROOT, 'ui', path.basename(p)));
+    if (p === '/api/styles') return send(res, 200, { industries: INDUSTRIES.map(([id, name, style]) => ({ id, name, style })), styles: Object.entries(STYLES).map(([id, v]) => ({ id, name: v.name, acc: v.acc })) });
     if (p === '/api/health') return send(res, 200, { ok: true, ai: aiMode(), app: APP_URL, queue: queueInfo() });
     const fm = p.match(/^\/jobs\/([^/]+)\/(.+)$/); // file của dự án: index.html, media, kit, out.mp4 (id ngẫu nhiên = chìa)
     if (fm && req.method === 'GET') {
@@ -109,7 +115,9 @@ http.createServer(async (req, res) => {
     if (p === '/api/jobs' && req.method === 'POST') {
       const b = await body(req);
       const id = crypto.randomBytes(12).toString('base64url');
-      const j = { id, genre: b.genre || 'chung', format: b.format || '9:16', status: 'new', steps: [], created: Date.now(), dir: path.join(JOBS, id) };
+      // ngành (20 nhóm, rỗng = AI tự nhận diện) + phong cách (rỗng = theo ngành / AI chọn)
+      const ind = IND[b.industry] ? b.industry : '', sty = STYLES[b.style] ? b.style : '';
+      const j = { id, genre: b.genre || IND[ind]?.genre || 'chung', industry: ind, style: sty, format: b.format || '9:16', status: 'new', steps: [], created: Date.now(), dir: path.join(JOBS, id) };
       fs.mkdirSync(path.join(j.dir, 'raw'), { recursive: true });
       jobs.set(id, j); save(j);
       return send(res, 200, { id });
@@ -132,6 +140,9 @@ http.createServer(async (req, res) => {
     if (act === 'start' && req.method === 'POST') {
       const b = await body(req);
       if (b.genre) j.genre = b.genre;
+      if (b.industry !== undefined && (b.industry === '' || IND[b.industry])) j.industry = b.industry;
+      if (b.style !== undefined && (b.style === '' || STYLES[b.style])) j.style = b.style;
+      delete j.styleOverride;
       if (j.status === 'running') return send(res, 409, { error: 'Đang dựng' });
       pipeline(j);
       return send(res, 200, { ok: true });
@@ -161,6 +172,7 @@ http.createServer(async (req, res) => {
           j.timeline = JSON.parse(fs.readFileSync(path.join(j.dir, 'timeline.json'), 'utf8'));
           j.version = (j.version || 0) + 1; j.approved = false;
           j.chat = { status: 'done', n, ops, say, version: j.version };
+          qcTimeline(j, j.timeline).then(q => { j.qc = q; save(j); }).catch(() => {});
           (j.chatLog = j.chatLog || []).push({ t: Date.now(), text, target: b.target || '', say, ops: ops.map(o => o.op + ':' + (o.id || '')) }); // lưu để soi khi khách báo AI không hiểu
           step(j, `Sửa theo chat: ${ops.length} thao tác (${Math.round((Date.now() - t0) / 1000)} s)`);
         })
@@ -172,7 +184,13 @@ http.createServer(async (req, res) => {
       if (j.render?.status === 'running') return send(res, 409, { error: 'Đang xuất' });
       j.render = { status: 'running', pct: 0, t0: Date.now(), queue: 0 }; save(j);
       render(j, pct => { j.render.pct = pct; }, q => { j.render.queue = q; })
-        .then(() => { j.render = { status: 'done', pct: 100, sec: Math.round((Date.now() - j.render.t0) / 1000), url: `/jobs/${j.id}/out.mp4` }; step(j, `Xuất MP4 xong trong ${j.render.sec} s`); })
+        .then(async () => {
+          j.render = { status: 'done', pct: 100, sec: Math.round((Date.now() - j.render.t0) / 1000), url: `/jobs/${j.id}/out.mp4` };
+          step(j, `Xuất MP4 xong trong ${j.render.sec} s`);
+          // đo file xuất thật: thời lượng, khung đen, hình đứng, âm lượng → cập nhật điểm
+          if (j.qc?.items?.length) { j.qc = await qcExport(j, j.timeline, j.qc).catch(() => j.qc); step(j, `Kiểm duyệt sau xuất: ${j.qc.score}/100 · ${j.qc.level}`); }
+          save(j);
+        })
         .catch(e => { j.render = { status: 'error', error: e.message }; step(j, 'Xuất lỗi: ' + e.message); });
       return send(res, 200, { ok: true });
     }

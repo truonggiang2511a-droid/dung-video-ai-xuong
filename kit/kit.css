@@ -7,15 +7,15 @@ video.clip{width:100%;height:100%;object-fit:cover;transform-origin:50% 38%}
 /* hook */
 .hook{position:absolute;top:13%;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:22px}
 .band{transform-origin:0 50%;padding:18px 44px;border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.35);transform:rotate(-2deg);max-width:88%}
-.band span{display:inline-block;font:900 calc(88px * var(--ts,1))/1.08 BVP;color:#14161a;letter-spacing:-1px;text-align:center}
+.band span{display:inline-block;font:900 calc(88px * var(--ts,1))/1.08 var(--f-head,BVP);color:#14161a;letter-spacing:-1px;text-align:center}
 .hsub{font:900 46px/1.1 Mont;color:#fff;text-shadow:0 4px 0 #000,0 0 24px rgba(0,0,0,.6);text-align:center;max-width:90%}
 /* lockups */
 .lock{position:absolute;top:11%;left:0;right:0;display:flex;flex-direction:column;align-items:center}
 .lead{font:900 54px/1.1 Mont;color:#fff;letter-spacing:6px;text-shadow:0 4px 0 rgba(0,0,0,.55);margin-bottom:6px}
-.big{font:400 calc(200px * var(--ts,1))/1.05 Anton;letter-spacing:2px;text-align:center;max-width:94%}
+.big{font:400 calc(200px * var(--ts,1))/1.05 var(--f-big,Anton);letter-spacing:2px;text-align:center;max-width:94%}
 .gold{color:#ffd84a;text-shadow:0 6px 0 #b77900,0 12px 0 #6b4500,0 22px 34px rgba(0,0,0,.55)}
 .price{padding:46px 24px 0;color:transparent;-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:3px rgba(255,255,255,.55);filter:drop-shadow(0 8px 0 #5d0008) drop-shadow(0 20px 26px rgba(0,0,0,.6))}
-.keyw{font:900 calc(112px * var(--ts,1))/1.08 BVP;color:#fff;text-align:center;max-width:92%;-webkit-text-stroke:12px #111;paint-order:stroke fill;text-shadow:0 14px 0 rgba(0,0,0,.35)}
+.keyw{font:900 calc(112px * var(--ts,1))/1.08 var(--f-head,BVP);color:#fff;text-align:center;max-width:92%;-webkit-text-stroke:12px #111;paint-order:stroke fill;text-shadow:0 14px 0 rgba(0,0,0,.35)}
 .keyw em{font-style:normal;color:var(--acc,#D1FE17)}
 .chip{transform-origin:50% 50%;margin-top:18px;background:rgba(10,12,16,.72);border:2px solid rgba(255,255,255,.25);color:#fff;font:900 44px/1.1 Mont;padding:14px 30px;border-radius:999px}
 .sign{margin-top:-10px;font:700 92px/1.1 Sign;color:#fff;transform:rotate(-6deg);text-shadow:0 4px 12px rgba(0,0,0,.7)}
@@ -25,7 +25,7 @@ video.clip{width:100%;height:100%;object-fit:cover;transform-origin:50% 38%}
 .ico.badge svg{width:80px;height:80px}
 .ico.emo img{width:170px;height:170px;display:block;filter:drop-shadow(0 16px 22px rgba(0,0,0,.45))}
 /* subtitles */
-.sub{position:absolute;top:67%;left:70px;right:160px;text-align:center;font:900 calc(76px * var(--ss,1))/1.12 BVP;text-transform:uppercase}
+.sub{position:absolute;top:67%;left:70px;right:160px;text-align:center;font:900 calc(76px * var(--ss,1))/1.12 var(--f-head,BVP);text-transform:uppercase}
 .sub b{display:inline-block;margin:0 .14em;color:#fff;-webkit-text-stroke:10px #000;paint-order:stroke fill;font-weight:900}
 /* CTA */
 .cta{position:absolute;top:47%;left:70px;right:160px;text-align:center;border-radius:24px;padding:34px 20px;box-shadow:0 20px 40px rgba(0,0,0,.4)}
@@ -92,3 +92,34 @@ video.cut{z-index:4;object-fit:cover;transform-origin:50% 38%}
 .fol .fs{font:900 28px/1.2 Mont;color:#c9ced6;margin-top:6px}
 .fol .fb{flex:none;border-radius:18px;padding:22px 30px;font:900 40px/1 BVP;color:#14161a}
 .fol .f2{display:none}
+
+/* KIỂU PHỤ ĐỀ theo phong cách: stroke (viền đen dày — mạng xã hội) · box (ô tối từng chữ — giáo dục/phỏng vấn) · clean (bóng mềm — doanh nghiệp/làm đẹp/cinematic) */
+.sub.look-box b{-webkit-text-stroke:0;background:rgba(10,12,16,.72);padding:4px 12px;border-radius:10px;margin:0 .06em}
+.sub.look-clean{text-transform:none}
+.sub.look-clean b{-webkit-text-stroke:0;font-weight:800;text-shadow:0 3px 12px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.9)}
+/* DANH SÁCH ✓ · SỐ CHẠY · TRÍCH DẪN */
+.lst{display:flex;flex-direction:column;align-items:flex-start;max-width:84%;gap:8px}
+.li{display:flex;gap:18px;align-items:center;font:900 calc(62px * var(--ts,1))/1.15 var(--f-head,BVP);color:#fff;-webkit-text-stroke:8px #111;paint-order:stroke fill;text-transform:uppercase}
+.li i{font-style:normal;color:var(--acc,#D1FE17);min-width:56px;text-align:center}
+.qtb{padding:0 60px}
+.qm{font:400 240px/0.62 Anton;color:var(--acc,#D1FE17);text-shadow:0 8px 24px rgba(0,0,0,.5)}
+.qt{font:800 calc(64px * var(--ts,1))/1.22 var(--f-head,BVP);color:#fff;text-align:center;max-width:860px;text-shadow:0 4px 18px rgba(0,0,0,.75)}
+.qw{font:900 36px/1.2 Mont;color:var(--acc,#D1FE17);margin-top:16px;letter-spacing:1px}
+[data-tpl=list],[data-tpl=stat],[data-tpl=quote]{z-index:3}
+
+/* KIỂU CHỮ ĐIỂM NHẤN RIÊNG TỪNG PHONG CÁCH (Master Rules: “không lặp 1 mẫu cho mọi khách”, “mỗi video 1 phong cách thống nhất”) */
+.st-sales .keyw em,.st-sport .keyw em{background:var(--acc);color:#14161a;-webkit-text-stroke:0;padding:0 .16em;border-radius:.12em;display:inline-block;transform:rotate(-2deg);box-shadow:0 .1em 0 rgba(0,0,0,.35)}
+.st-corporate .keyw{-webkit-text-stroke:0;letter-spacing:-1px;text-shadow:0 6px 26px rgba(0,0,0,.65)}
+.st-corporate .keyw em{color:#fff;box-shadow:inset 0 -.2em 0 var(--acc)}
+.st-corporate .band{border-radius:4px;transform:none}
+.st-edu .keyw,.st-interview .keyw{-webkit-text-stroke:0;background:rgba(10,12,16,.8);padding:.12em .42em;border-radius:.22em}
+.st-interview .keyw{border-left:.14em solid var(--acc);border-radius:.08em}
+.st-cinematic .keyw{-webkit-text-stroke:0;font-weight:800;letter-spacing:.16em;text-shadow:0 4px 22px rgba(0,0,0,.75)}
+.st-cinematic .keyw em,.st-beauty .keyw em,.st-food .keyw em{font-family:Sign;text-transform:none;letter-spacing:0;font-size:1.3em;font-weight:700}
+.st-beauty .keyw{-webkit-text-stroke:0;letter-spacing:.08em;text-shadow:0 4px 20px rgba(0,0,0,.6)}
+.st-food .keyw em{-webkit-text-stroke:6px #2a1600}
+.st-vlog .keyw{background:#fff;color:#14161a;-webkit-text-stroke:0;padding:.08em .34em;border-radius:.22em;transform:rotate(-3deg);box-shadow:0 .12em 0 rgba(0,0,0,.35)}
+.st-vlog .keyw em{color:#ff3d9a}
+.st-cinematic .band,.st-beauty .band{background:transparent!important;box-shadow:none;transform:none}
+.st-cinematic .band span,.st-beauty .band span{color:#fff;letter-spacing:.18em;font-weight:800;font-size:calc(66px * var(--ts,1));text-shadow:0 4px 22px rgba(0,0,0,.8)}
+.st-vlog .band{transform:rotate(-4deg)}
