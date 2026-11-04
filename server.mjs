@@ -6,6 +6,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { prepare, transcribe, analyze, plan, finalize, opsForCursor, writeComposition, chat, render, APP_URL } from './lib/pipeline.mjs';
 import { aiMode } from './lib/ai.mjs';
+import { tagBrolls } from './lib/vision.mjs';
 import { queueInfo } from './lib/queue.mjs';
 
 const ROOT = import.meta.dirname;
@@ -58,9 +59,10 @@ async function pipeline(j) {
     await prepare(j, s => step(j, s), live);
     await transcribe(j, s => step(j, s), live);
     await analyze(j, s => step(j, s), live);
+    if (j.brollsReady) await j.brollsReady;
+    await tagBrolls(j, s => step(j, s), live).catch(e => step(j, 'AI nhìn cảnh phụ lỗi: ' + e.message));
     step(j, 'AI đọc lời nói: tìm đoạn nói hỏng, chọn chữ điểm nhấn, ghép cảnh phụ…');
     const p = await plan(j, s => step(j, s), live);
-    if (j.brollsReady) await j.brollsReady;
     const { T, removed } = finalize(j, p);
     fs.writeFileSync(path.join(j.dir, 'timeline.json'), JSON.stringify(T, null, 2));
     writeComposition(j);
@@ -131,12 +133,12 @@ http.createServer(async (req, res) => {
       return send(res, 200, { ok: true });
     }
     if (!act && req.method === 'GET') {
-      const { dir, words, tlWords, brollsReady, sentences, silences, autoDrops, fillCuts, segs, live, ...pub } = j;
+      const { dir, words, tlWords, brollsReady, sentences, silences, autoDrops, fillCuts, mumbleCuts, segs, live, ...pub } = j;
       const since = +url.searchParams.get('seq') || -1;
       if (live && live.seq !== since) { // gửi phần đang dựng (chỉ khi có thay đổi)
         pub.live = { ...live, media: (j.media || []).map(({ name, dur, main, ready, file }) => ({ name, dur, main, ready, file })),
           words: (j.words || []).map(w => [w.w, Math.round(w.s * 100) / 100, Math.round(w.e * 100) / 100]),
-          silences: j.silences, autoDrops: (j.autoDrops || []).map(d => ({ ...d, a: sentences?.[d.from]?.start, b: sentences?.[d.to]?.end })),
+          silences: [...(j.silences || []), ...(j.mumbleCuts || [])], autoDrops: (j.autoDrops || []).map(d => ({ ...d, a: sentences?.[d.from]?.start, b: sentences?.[d.to]?.end })),
           sentences: (sentences || []).map(x => [x.start, x.end]) };
       }
       if (!url.searchParams.has('admin')) { delete pub.ai; delete pub.aiCost; delete pub.aiSec; }

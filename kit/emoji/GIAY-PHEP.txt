@@ -1,0 +1,2 @@
+Hình emoji 3D trong thư mục này: Fluent Emoji (Microsoft) — giấy phép MIT.
+https://github.com/microsoft/fluentui-emoji — chép từ kho của app Dựng Video AI (public/lib/e/3d-*.svg).

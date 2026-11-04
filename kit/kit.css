@@ -10,7 +10,7 @@ video.clip{width:100%;height:100%;object-fit:cover;transform-origin:50% 38%}
 .band span{display:inline-block;font:900 88px/1.08 BVP;color:#14161a;letter-spacing:-1px;text-align:center}
 .hsub{font:900 46px/1.1 Mont;color:#fff;text-shadow:0 4px 0 #000,0 0 24px rgba(0,0,0,.6);text-align:center;max-width:90%}
 /* lockups */
-.lock{position:absolute;top:15%;left:0;right:0;display:flex;flex-direction:column;align-items:center}
+.lock{position:absolute;top:9%;left:0;right:0;display:flex;flex-direction:column;align-items:center}
 .lead{font:900 54px/1.1 Mont;color:#fff;letter-spacing:6px;text-shadow:0 4px 0 rgba(0,0,0,.55);margin-bottom:6px}
 .big{font:400 200px/1.05 Anton;letter-spacing:2px;text-align:center;max-width:94%}
 .gold{color:#ffd84a;text-shadow:0 6px 0 #b77900,0 12px 0 #6b4500,0 22px 34px rgba(0,0,0,.55)}
@@ -19,9 +19,11 @@ video.clip{width:100%;height:100%;object-fit:cover;transform-origin:50% 38%}
 .keyw em{font-style:normal;color:var(--acc,#D1FE17)}
 .chip{transform-origin:50% 50%;margin-top:18px;background:rgba(10,12,16,.72);border:2px solid rgba(255,255,255,.25);color:#fff;font:900 44px/1.1 Mont;padding:14px 30px;border-radius:999px}
 .sign{margin-top:-10px;font:700 92px/1.1 Sign;color:#fff;transform:rotate(-6deg);text-shadow:0 4px 12px rgba(0,0,0,.7)}
-/* icon badge (sits beside its text) */
-.badge{position:absolute;top:12%;right:8%;width:150px;height:150px;border-radius:50%;display:grid;place-items:center;box-shadow:0 14px 30px rgba(0,0,0,.45),inset 0 6px 0 rgba(255,255,255,.3)}
-.badge svg{width:86px;height:86px}
+/* hình đi kèm chữ: nằm trong khối chữ, phía trên dòng dẫn */
+.ico{margin-bottom:14px}
+.ico.badge{width:140px;height:140px;border-radius:50%;display:grid;place-items:center;box-shadow:0 14px 30px rgba(0,0,0,.45),inset 0 6px 0 rgba(255,255,255,.3)}
+.ico.badge svg{width:80px;height:80px}
+.ico.emo img{width:170px;height:170px;display:block;filter:drop-shadow(0 16px 22px rgba(0,0,0,.45))}
 /* subtitles */
 .sub{position:absolute;top:67%;left:50px;right:50px;text-align:center;font:900 76px/1.12 BVP;text-transform:uppercase}
 .sub b{display:inline-block;margin:0 .14em;color:#fff;-webkit-text-stroke:10px #000;paint-order:stroke fill;font-weight:900}

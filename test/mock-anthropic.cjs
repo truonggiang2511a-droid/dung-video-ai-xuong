@@ -11,8 +11,8 @@ http.createServer((req, res) => {
       const price = ss.find(s => /tỷ/.test(s.text) && s.i !== bad), area = ss.find(s => /mét vuông|m2|m²/i.test(s.text));
       out = { drop: bad >= 0 ? [{ from: bad, to: bad, why: 'noi_lai', note: 'nói giá hỏng, phía sau nói lại đầy đủ' }] : [],
         hook: { text: 'NHÀ PHỐ MẶT TIỀN', sub: '', why: 'câu mở đầu hấp dẫn' },
-        texts: [area && { tpl: 'spec-gold', start: area.start + 0.3, dur: 2.4, lead: 'DIỆN TÍCH', text: '52 M²', sub: '1 trệt · 2 lầu', icon: 'ruler', why: 'nhắc diện tích' },
-                price && { tpl: 'price-red', start: price.start + 0.2, dur: 2.6, lead: 'GIÁ CHỈ', text: '3 TỶ 990', sub: 'sổ hồng riêng', icon: 'money', why: 'nhắc giá' }].filter(Boolean),
+        texts: [area && { tpl: 'spec-gold', start: area.start + 0.3, dur: 2.4, lead: 'DIỆN TÍCH', text: '52 M²', sub: '1 trệt · 2 lầu', icon: 'ruler', emoji: 'house', why: 'nhắc diện tích' },
+                price && { tpl: 'price-red', start: price.start + 0.2, dur: 2.6, lead: 'GIÁ CHỈ', text: '3 TỶ 990', sub: 'sổ hồng riêng', icon: 'money', emoji: 'money-bag', why: 'nhắc giá' }].filter(Boolean),
         brolls: brief.brolls.map(x => ({ file: x.file, start: (area || ss[1]).start, dur: 2.2, from: 0.3, tpl: 'whip', why: 'cảnh bếp minh hoạ' })), cta: 'NHẮN TIN XEM NHÀ NGAY' };
     } else out = { ops: [{ op: 'update', id: 't1', props: { color: 'green' }, why: 'khách muốn giá màu xanh lá' }] };
     const text = JSON.stringify(out, null, 1);
