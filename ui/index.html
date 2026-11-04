@@ -375,7 +375,9 @@ function liveDraw(lv) {
   live.brolls = (dr.brolls || []).length;
   if (lv.final && !live.cuts) {
     live.cuts = true;
-    for (const c of lv.cuts || []) if (!document.querySelector(`.cutm[style*="left: ${(c.a * pps()).toFixed(0)}"]`)) cutMark(c.a, c.b, c.why || 'lang');
+    // vẽ lại ĐÚNG các chỗ đã cắt thật (đoạn AI đề nghị bỏ mà bị chốt an toàn giữ lại thì vạch đỏ biến mất)
+    document.querySelectorAll('.cutm').forEach(e => e.remove());
+    for (const c of lv.cuts || []) cutMark(c.a, c.b, c.why || 'lang');
   }
 }
 

@@ -4,7 +4,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { prepare, transcribe, analyze, plan, finalize, opsForCursor, writeComposition, chat, render, APP_URL } from './lib/pipeline.mjs';
+import { silenceCuts, prepare, transcribe, analyze, plan, finalize, opsForCursor, writeComposition, chat, render, APP_URL } from './lib/pipeline.mjs';
 import { aiMode } from './lib/ai.mjs';
 import { tagBrolls, tagMain } from './lib/vision.mjs';
 import { queueInfo } from './lib/queue.mjs';
@@ -141,7 +141,7 @@ http.createServer(async (req, res) => {
       if (live && live.seq !== since) { // gửi phần đang dựng (chỉ khi có thay đổi)
         pub.live = { ...live, media: (j.media || []).map(({ name, dur, main, ready, file }) => ({ name, dur, main, ready, file })),
           words: (j.words || []).map(w => [w.w, Math.round(w.s * 100) / 100, Math.round(w.e * 100) / 100]),
-          silences: [...(j.silences || []), ...(j.mumbleCuts || [])], autoDrops: (j.autoDrops || []).map(d => ({ ...d, a: sentences?.[d.from]?.start, b: sentences?.[d.to]?.end })),
+          silences: [...(j.silences ? silenceCuts(j) : []), ...(j.mumbleCuts || [])], // chỉ chỗ sẽ cắt thật autoDrops: (j.autoDrops || []).map(d => ({ ...d, a: sentences?.[d.from]?.start, b: sentences?.[d.to]?.end })),
           sentences: (sentences || []).map(x => [x.start, x.end]) };
       }
       if (!url.searchParams.has('admin')) { delete pub.ai; delete pub.aiCost; delete pub.aiSec; }

@@ -107,4 +107,9 @@ Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. L�
   (2) `retakeGuess` (máy tự đoán nói lại: dừng ≥ 3 s / buột 1–2 chữ / “lại nha” → câu 60 s trước có ≥ 40 % cặp chữ lặp lại trong 40 s sau) → gửi AI dạng
   `retake_hint`; AI lỗi hoặc mất `drop` thì dùng luôn (vẫn qua `checkDrops`). 3 bản chép lời thật đều ra câu 5–11; 10+ video thử khác không bắt nhầm.
   Mô phỏng AI hỏng trên dữ liệu thật: cắt 63 s → còn 161 s, không mất chữ nào ngoài đoạn bỏ (trừ chữ Whisper kéo dài qua chỗ vấp).
+- 2026-11-04 15:54 (Giang: “AI cắt chuẩn mà không thấy xoá”): trang vẽ 39 vạch “cắt khoảng lặng” từ `job.silences` THÔ, nhưng finalize chỉ cắt 20
+  (lặng ngắn sau khi chừa 0,1/0,15 s còn < 0,15 s; lặng dài bị “lõi chữ” chặn vì máy chép lời báo chữ kéo dài phủ qua, vd “Vô, hai” 71,6–72,7 phủ 1,15 s
+  im lặng). Sửa: `silenceCuts(job)` = MỘT nguồn cho cả vạch đỏ (server gửi `live.silences`) lẫn lúc cắt; lặng ≥ 0,45 s cắt theo âm thanh (không trừ lõi chữ,
+  còn 0,25 s nghỉ), ngắn hơn mới trừ lõi chữ; lúc xong trang xoá hết vạch, vẽ lại đúng `job.cuts` (đoạn AI đề nghị mà chốt an toàn giữ lại thì vạch biến mất).
+  Dữ liệu thật: 25 vạch = 25 chỗ xoá thật, im lặng sót dài nhất 0,40 s (trước 1,15 s), không mất chữ. Bài kiểm tra `nha-xinh-noi-lai` giờ kèm `silences` đo từ âm thanh.
 - HyperFrames có gói trả phí "HyperFrames Pro" (templates, style-sampling) và bật telemetry mặc định → `npx hyperframes telemetry disable`.
