@@ -18,7 +18,7 @@ Không nói "đã chạy được" khi chưa chạy thật.
 | `lib/ai.mjs` | Bộ não: `aiMode()` = `XUONG_AI` hoặc tự chọn (`ANTHROPIC_API_KEY` có → `api`, không → `claude`). **api**: Claude Haiku 5.5 `stream:true`, `output_config.effort low`, không temperature; đọc luồng chữ → `objs()` bóc từng `{…}` xong trong `drop/texts/brolls` → `live.draft` để trang vẽ ngay; giá 0,10/0,50 USD/1 triệu token. **claude**: Claude Code (`XUONG_CLAUDE_MODEL` tuỳ chọn). `.env` hoặc `cau-hinh.txt` ở thư mục gốc được nạp tự động (công cụ ghi file từ xa không cho ghi `.env*`). `ANTHROPIC_BASE_URL` để thử bằng `test/mock-anthropic.cjs` |
 | `lib/vision.mjs` | **AI nhìn cảnh phụ**: cảnh ≤ 24 s = 1 đoạn, dài hơn = từng đoạn 8 s (tối đa 24) → ảnh ghép 3 khung 240 px → `APP_URL/api/vision` (Workers AI, miễn phí, 8 ảnh/lần) → `m.parts[{from,to,thay}]` → brief `brolls[].parts` để AI ghép theo THỨ NHÌN THẤY (tên file kiểu “DJI 0541” vô nghĩa) và dùng nhiều đoạn của 1 cảnh dài |
 | `lib/queue.mjs` | `slot('cpu'|'render', fn, onQueue)`: tối đa `XUONG_CPU` (2) việc đổi file và `XUONG_RENDER` (2) việc xuất cùng lúc, còn lại xếp hàng, báo số thứ tự (`/api/health` → `queue`) |
-| `lib/gen.mjs` | Timeline → HTML HyperFrames. Kho mẫu: `video` (đoạn cắt, zoom xen kẽ 1/1,12), `broll` (`whip`/`fade`), `hook-band`, `key-pop` (`*từ*` tô màu), `spec-gold`, `price-red` (màu red/green/gold/blue, `sub` = chữ ký tay), `cta`, `badge` (14 icon SVG), `karaoke` (phụ đề từng chữ), `sfx`. Màu theo ngành `GENRES` |
+| `lib/gen.mjs` | Timeline → HTML HyperFrames. Kho mẫu: `video` (đoạn cắt, zoom xen kẽ 1/1,12, **`punch` = giật zoom ±10 %** từng khúc fromTo nối nhau), `broll` (`whip|zoom|push|radial|fade|blur|slide`), **`label`** (block/kicker/bars/pill/mask — nhãn phòng, thẻ chương, tên người nói), **`fx`** (leak/flash/burn, lớp phủ z 5), **`cta-follow`**, `hook-band`, `key-pop` (`*từ*` tô màu), `spec-gold`, `price-red` (màu red/green/gold/blue, `sub` = chữ ký tay), `cta`, `badge` (14 icon SVG), `karaoke` (phụ đề từng chữ), `sfx`. Màu theo ngành `GENRES` |
 | `lib/run.mjs` | Chạy lệnh ngoài; Windows: `npx`/`claude` là .cmd → chạy qua shell, có đặt ngoặc kép |
 | `kit/LUAT-DUNG.md` | Luật dựng cho Claude Code — chép vào `jobs/<id>/CLAUDE.md`; định dạng `plan.json` / `ops.json` |
 | `kit/` | kit.css, 4 font Việt (OFL), gsap.min.js, whoosh/ding/pop.wav (tự tạo bằng ffmpeg), **64 emoji 3D Fluent (MIT)** `kit/emoji/*.svg` + `nhan.json` (nghĩa tiếng Việt cho AI) — gửi lên máy Giang dạng 1 file `emoji-pack.json`, `pipeline.mjs` tự bung lần đầu. Icon/emoji vẽ TRONG khối chữ (`.lock > .ico`, phía trên dòng dẫn) → không bao giờ che chữ; emoji lắc nhẹ (`icoAnim`) |
@@ -36,6 +36,20 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
 `/home/claude/restart.sh` (máy dựng + Anthropic giả) · `AROLL=/tmp/aroll2.mp4 BROLL="/tmp/Phong bep.mp4" SIZE=1440x900 node test/ui.cjs` (chụp `test/out-*-live-*.png`).
 Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. Lại nha.” rồi nói lại giá đủ: 21,9 s → 13,3 s, bỏ đúng câu hỏng + “lại nha”, không mất chữ nào.
 5 khách cùng lúc (máy 2 nhân): dựng xong cả 5 trong 47 s, xuất 5 × 13 s xong sau ~250 s, hàng chờ báo đúng thứ tự 1-2-3.
+
+## Luật dựng chuyên nghiệp (4/11 15:00, Giang duyệt bước 1 + 2)
+- **Mở đầu gây tò mò** `plan.cold_open {start,end}` (giây gốc, 1,2–5 s, bám đầu/cuối chữ, không trong `drop`, chỉ khi sau cắt ≥ 20 s):
+  đoạn `cold:true` đứng đầu `job.segs`; `toTl`/`fwd` BỎ QUA đoạn cold (chữ/cảnh phụ ăn theo lần nói chính); phụ đề có bản sao cho đoạn cold;
+  `job.coldDur`; chớp trắng `fx flash` ở cuối đoạn cold; cảnh phụ không đặt trong đoạn cold. Bộ dự phòng: câu có giá 1,5–4,5 s.
+- **Thẻ chương** `plan.chapters [{start,title}]` → `label` kicker "01 · VỊ TRÍ" + vệt sáng (≤ 3); ≥ 12 s/chương, ≤ 5.
+- **Nhãn cảnh phụ** `brolls[].label` (BĐS: thiếu thì lấy `parts[].thay` ≤ 18 ký tự, ≤ 3 từ, không phải bản đồ); không lặp nhãn trong 40 s; 1 nhãn 1 lúc.
+- **Đổi nhịp ≤ 4 s** `punches()`: mốc thay đổi = đoạn video, cảnh phụ (đầu+cuối), chữ, nhãn; khoảng > 4 s không bị cảnh phụ che → giật zoom ở đầu chữ gần giữa; key-pop cũng giật zoom. `makeCutouts` xoá `punch` ở đoạn có chữ sau người (lớp người phải zoom khớp).
+- **Giọng rõ**: aroll đổi file với `VOICE_AF` (highpass 80 · afftdn · acompressor · loudnorm −14 LUFS · bù trễ 25 ms của bộ lọc, đo tương quan = 0 ms); `XUONG_VOICE=0` tắt. voice.wav (chép lời + đo lặng) lấy từ file GỐC.
+- **Vùng an toàn TikTok**: chữ lớn từ 11 %, phụ đề 67 % lề phải 160 px, nút kết đáy 22 %, nhãn 55 % bên trái.
+- **Cảnh phụ vào sớm 0,3 s** (bản đồ đúng giờ), dài thêm 0,3 s, ≤ 3,4 s; kiểu vào xoay vòng khi AI không chọn.
+- Người nói tự giới thiệu → `plan.speaker {name,role}` → thanh tên `bars`. Nhắc tên kênh → `channel` + `cta_style:"follow"`.
+- Kho mẫu lấy ý từ registry HyperFrames (Apache 2.0, ghi công `kit/GHI-CONG-HYPERFRAMES.txt`). KHÔNG dùng khối shader (light-leak/cinematic-zoom/glitch…): chúng chụp DOM thành texture, không chạy với video.
+- Kiểm: `node test/pro-check.mjs <thư mục> <job thật>` (dữ liệu Nhà Xinh: cold open “3 tỷ 990 triệu, còn thương lượng” 3,6 s, 5 chương, 6 nhãn phòng, 25 lần giật zoom, khoảng không đổi dài nhất 3,9 s).
 
 ## Nhật ký bài học
 - 2026-11-04: `<hyperframes-player>` thấy `window.__timelines` thì chạy kiểu "timeline trực tiếp", KHÔNG gắn runtime → clip không ẩn
@@ -72,4 +86,6 @@ Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. L�
   (giáp ranh, cách … km, cao tốc, chợ, thuộc xã/huyện…) → nối các đoạn bản đồ liền nhau của cùng file cho đủ dài (≤ 40 s), hiện suốt lúc nói.
   Dữ liệu thật: bản đồ 12,5 s trùng đúng 2 câu “Phước Lý Cần Giuộc… giáp ranh Bình Chánh… cao tốc Bến Lức – Long Thành… cách chợ Bình Chánh 2 km”.
   Kèm: AI trả `fix` sửa chính tả tên riêng trong phụ đề (“Cần Dũ” → “Cần Giuộc”, “trợ” → “chợ”) — `applyFixes` thay chuỗi chữ liên tiếp, giữ giờ.
+- 2026-11-04 15:20: nhãn `mask`/`bars` dùng `clip-path` → cắt mất dấu tiếng Việt phía trên (“BẾP MỞ” → “BEP MƠ”) → thêm padding-top.
+- 2026-11-04: cảnh phụ “Đăng tiktok cô thùy 2” là video ĐÃ DỰNG (có chữ, phụ đề đóng cứng) → ghép vào bị chồng 2 lớp chữ. Nên dặn khách gửi cảnh quay gốc.
 - HyperFrames có gói trả phí "HyperFrames Pro" (templates, style-sampling) và bật telemetry mặc định → `npx hyperframes telemetry disable`.

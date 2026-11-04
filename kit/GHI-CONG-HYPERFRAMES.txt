@@ -1,0 +1,7 @@
+Một số mẫu trong kho được làm lại (viết lại cho video dọc, chữ tiếng Việt) dựa trên khối mẫu của HyperFrames
+(https://github.com/heygen-com/hyperframes, thư mục registry/), giấy phép Apache License 2.0, © HeyGen:
+- Nhãn / thanh tên: lt-color-block, lt-kicker-name, lt-mask-reveal, lt-stack-bars, lt-soft-pill  → mẫu "label" (block|kicker|mask|bars|pill)
+- Vệt sáng: organic-light-leak-overlay → mẫu fx "leak"; chớp trắng, cháy phim: transitions-light → fx "flash", "burn"
+- Kiểu vào cảnh phụ: transitions-push / transitions-scale / transitions-blur / transitions-radial / transitions-dissolve → broll push|zoom|blur|radial|fade|slide
+- Nút theo dõi: tiktok-follow / instagram-follow → "cta-follow" (KHÔNG dùng logo, tên hãng)
+Toàn văn giấy phép: https://www.apache.org/licenses/LICENSE-2.0

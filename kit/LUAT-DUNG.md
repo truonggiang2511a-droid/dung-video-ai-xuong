@@ -15,10 +15,15 @@ trong đoạn đó), danh sách `emojis` (khoá: nghĩa) và `icons`, `target` (
   "drop":  [{"from": 3, "to": 7, "why": "noi_lai|ekip|lap", "note": "1 câu giải thích ngắn"}],
   "fix":   [{"sai": "Cần Dũ", "dung": "Cần Giuộc"}],
   "hook":  {"text": "TIÊU ĐỀ 2–5 TỪ", "sub": "dòng phụ ngắn hoặc rỗng", "why": "vì sao"},
+  "cold_open": {"start": 118.4, "end": 121.6, "why": "câu giá gây tò mò"},
   "texts": [{"tpl": "price-red|spec-gold|key-pop", "start": 61.2, "dur": 2.4, "lead": "", "text": "CHỮ CHÍNH", "sub": "", "emoji": "money-bag", "icon": "", "why": ""}],
-  "brolls":[{"file": "b3.mp4", "start": 80.5, "dur": 2.6, "from": 0, "tpl": "whip|fade", "why": ""},
+  "brolls":[{"file": "b3.mp4", "start": 80.5, "dur": 2.6, "from": 0, "tpl": "whip|zoom|push|radial|fade|blur|slide", "label": "PHÒNG KHÁCH", "why": ""},
             {"kind": "map", "file": "b1.mp4", "start": 17.2, "end": 29.7, "why": "nói vị trí + tiện ích"}],
-  "cta": "NHẮN TIN XEM NHÀ NGAY"
+  "chapters": [{"start": 40.2, "title": "VỊ TRÍ"}, {"start": 95.0, "title": "BÊN TRONG NHÀ"}],
+  "speaker": {"name": "", "role": ""},
+  "cta": "NHẮN TIN XEM NHÀ NGAY",
+  "cta_style": "box|follow",
+  "channel": ""
 }
 ```
 MỌI giây (`start`) là giây trong VIDEO GỐC (giống `sentences`), máy sẽ tự đổi sang giờ sau khi cắt.
@@ -65,6 +70,26 @@ Luật:
 7. `hook.text` = ý hấp dẫn nhất video, có trong lời nói (2–5 từ, viết hoa).
 8. `cta` hợp ngành, viết hoa, ≤ 5 từ.
 
+### 1c. Luật dựng CHUYÊN NGHIỆP (máy làm phần kỹ thuật, bạn chỉ cần chọn đúng nội dung)
+9. MỞ ĐẦU GÂY TÒ MÒ `cold_open`: video sau cắt ≥ 20 s và có 1 câu "đắt" nằm GIỮA/CUỐI video (giá, con số bất ngờ, kết quả,
+   lời hứa) → ghi giây đầu/cuối câu đó (1,5–4,5 s). Máy phát câu đó trước, chớp trắng, rồi mới vào bài từ đầu (hook vẫn hiện).
+   Không có câu đủ mạnh, hoặc câu đó đã ở đầu video → bỏ khoá này. KHÔNG lấy câu trong `drop`.
+10. THẺ CHƯƠNG `chapters`: video ≥ 45 s có các phần rõ (vị trí → bên ngoài → bên trong → giá; nguyên liệu → cách làm → thành phẩm;
+   bước 1, 2, 3…) → mỗi phần 1 mục `start` = giây đầu câu mở phần, `title` 1–3 từ viết hoa. 2–5 chương, cách nhau ≥ 12 s.
+   Video ngắn / 1 ý → `[]`. Máy tự đánh số "01, 02…" và thêm vệt sáng chuyển phần.
+11. NHÃN CẢNH PHỤ `label`: cảnh phụ cho thấy 1 nơi / món / sản phẩm cụ thể → `label` 1–3 từ ("PHÒNG NGỦ MASTER", "SÂN THƯỢNG",
+   "BẾP MỞ", "THÀNH PHẨM"). Lấy theo `parts[].thay` VÀ lời nói, không bịa. Không chắc → bỏ trống.
+12. ĐỔI KIỂU VÀO CẢNH PHỤ (`tpl`): đừng dùng 1 kiểu cho cả video. `zoom` = vào mạnh (giá, điểm nhấn), `push` = lên tầng / đi tiếp,
+   `radial` = khoe không gian đẹp, `whip`/`slide` = lướt nhanh, `fade`/`blur` = nhẹ nhàng (cảnh chậm, cuối video). Bản đồ luôn `fade`.
+13. NGƯỜI NÓI `speaker`: chỉ khi người nói TỰ GIỚI THIỆU tên ("em là Hương, bên Nhà Xinh") → `name` = tên đúng như nói,
+   `role` = vai/đơn vị ngắn. Không nói tên → để trống. Không bịa.
+14. KÊNH `channel` + `cta_style`: người nói nhắc tên kênh / thương hiệu ("đăng ký kênh Nhà Xinh") → `channel` = tên đó,
+   `cta_style` = "follow" (nút Theo dõi kênh). Không có tên → `channel` rỗng, `cta_style` = "box".
+15. NHỊP: chữ, cảnh phụ, nhãn rải đều — không để quá 4 s chỉ có mặt người nói (máy tự "giật zoom" đầu chữ nếu còn trống,
+   nhưng cảnh phụ / chữ đúng nội dung luôn tốt hơn). Giây đầu tiên phải có chuyển động (hook + cold open).
+16. VÙNG AN TOÀN: máy đã đặt chữ tránh thanh tab (trên), nút tim (phải), chú thích (dưới) của TikTok — chữ điểm nhấn NGẮN
+   (≤ 4 từ / dòng) để không tràn vào vùng nút. Mỗi lúc chỉ 1 chữ lớn (máy tự giãn nếu chồng).
+
 ## Việc 2 — Sửa theo chat (đầu vào `chat.json`) → `ops.json`
 `chat.json` có: `request` (lời khách), `target` (id clip khách đang chọn, có thể rỗng), `timeline` (clip hiện tại: `id`, `type`,
 `tpl`, `start`, `dur`, `props` — giờ SAU KHI CẮT), `icons`, `duration`.
@@ -82,5 +107,11 @@ Trả mảng thao tác, chỉ đụng đúng chỗ khách nhờ:
   `big` (true = chữ CỰC TO, hợp với hook), `behind` (true = chữ nằm SAU người nói: máy tự tách người khỏi nền — LÀM ĐƯỢC, đừng từ chối).
 - “chữ hook to, ẩn sau nhân vật” → `{"op":"update","id":"hook","props":{"big":true,"behind":true},"dur":3}`.
 - “thêm icon BĐS to nửa khung hình” → `props.emoji` = khoá hợp nghĩa (vd house-with-garden) + `emojiSize: "big"`.
-- Đổi kiểu chữ = `update` với `tpl` (`price-red|spec-gold|key-pop|hook-band|cta`).
+- Đổi kiểu chữ = `update` với `tpl` (`price-red|spec-gold|key-pop|hook-band|cta|cta-follow`).
+- Cảnh phụ đổi kiểu vào = `update` với `tpl` (`whip|zoom|push|radial|fade|blur|slide`).
+- Nhãn (`type: "label"`, nhãn phòng / thẻ chương / tên người nói): `props` = `text`, `sub`, `kicker` (số chương), `color`,
+  `style` (`block|kicker|bars|pill|mask`). Thêm nhãn: `{"op":"add","clip":{"type":"label","start":12.0,"dur":2.4,"props":{"text":"PHÒNG KHÁCH","style":"pill"}}}`.
+- Hiệu ứng chuyển (`type: "fx"`, `tpl`: `leak` = vệt sáng ấm, `flash` = chớp trắng, `burn` = cháy phim; dài 0,5–1,5 s):
+  `{"op":"add","clip":{"type":"fx","tpl":"leak","start":20.0,"dur":1.2}}`.
+- Nút theo dõi kênh: `{"op":"update","id":"cta","tpl":"cta-follow","props":{"name":"Nhà Xinh","text":"Theo dõi để xem nhà mới mỗi ngày"}}`.
 - Không bịa số. Khách nói chung chung ("đẹp hơn") → chọn 1–3 thay đổi rõ ràng nhất. Khi trả JSON trực tiếp thì bọc: {"ops":[…]}.
