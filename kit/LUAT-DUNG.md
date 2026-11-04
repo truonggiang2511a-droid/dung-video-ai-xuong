@@ -65,7 +65,11 @@ Mẫu chữ:
 - `price-red` — giá tiền (tỷ, triệu, nghìn, k). `text` = "3 TỶ 990" / "3,8 TỶ"; `lead` = "GIÁ CHỈ"/"GIÁ BÁN"/"CHỈ CÒN";
   `sub` = ý đi kèm giá NẾU có nói (vd "sổ hồng riêng") — viết thường, làm chữ ký tay.
 - `spec-gold` — con số không phải tiền: diện tích (m², 5x16), số phòng, số tầng, km, %, số bước, phút… `sub` = thông tin phụ ngắn.
-- `key-pop` — cụm ý chính 2–4 từ VIẾT HOA lấy NGUYÊN VĂN từ lời nói; bọc 1 từ quan trọng nhất trong `*sao*`.
+- `key-pop` — cụm ý chính 2–4 từ VIẾT HOA lấy NGUYÊN VĂN từ lời nói; bọc CẢ CỤM CÓ NGHĨA quan trọng nhất trong `*sao*`
+  (tiếng Việt 1 từ thường 2 tiếng — KHÔNG tô 1 tiếng lẻ): ✅ "TRỒNG *CÂY XANH*", "PHÒNG *ĐỌC SÁCH*", "*GIƯỜNG ĐÔI*", "*PHÒNG THỜ* HOẶC NGỦ",
+  "TOILET *KHÉP KÍN*" · ❌ "TRỒNG CÂY *XANH*", "PHÒNG ĐỌC *SÁCH*", "GIƯỜNG *ĐÔI*", "PHÒNG *THỜ*".
+- `keywords` (khoá riêng của plan, sau `texts`): 10–30 cụm CÓ NGHĨA đáng tô màu trong PHỤ ĐỀ, chép đúng chữ trong lời nói
+  (vd "cây xanh", "sân thượng", "sổ hồng riêng", "Hưng Long", "dọn vào ở liền"). Con số + đơn vị máy tự tô.
 Luật:
 1. KHÔNG bịa: số, giá, tên nơi phải có NGUYÊN VĂN trong câu. Không có thì bỏ. Không ghi số điện thoại.
 2. Chữ hiện ĐÚNG lúc người nói nhắc tới: `start` = giây của cụm đó trong câu (ước theo vị trí chữ trong câu), `dur` 1,8–3 giây.
@@ -131,5 +135,7 @@ Trả mảng thao tác, chỉ đụng đúng chỗ khách nhờ:
   `style` (`block|kicker|bars|pill|mask`). Thêm nhãn: `{"op":"add","clip":{"type":"label","start":12.0,"dur":2.4,"props":{"text":"PHÒNG KHÁCH","style":"pill"}}}`.
 - Hiệu ứng chuyển (`type: "fx"`, `tpl`: `leak` = vệt sáng ấm, `flash` = chớp trắng, `burn` = cháy phim; dài 0,5–1,5 s):
   `{"op":"add","clip":{"type":"fx","tpl":"leak","start":20.0,"dur":1.2}}`.
+- Chỉnh MÀU cả video (mặc định bão hoà +15 %, sáng +10 %, tương phản +5 %): `{"op":"grade","grade":{"sat":1.2,"bri":1.05,"con":1.05},"why":"…"}`
+  (1 = màu gốc, khoảng 0,6–1,6; "tắt chỉnh màu" → `{"op":"grade","grade":{"off":true}}`). `timeline.grade` = mức đang dùng.
 - Nút theo dõi kênh: `{"op":"update","id":"cta","tpl":"cta-follow","props":{"name":"Nhà Xinh","text":"Theo dõi để xem nhà mới mỗi ngày"}}`.
 - Không bịa số. Khách nói chung chung ("đẹp hơn") → chọn 1–3 thay đổi rõ ràng nhất. Khi trả JSON trực tiếp thì bọc: {"ops":[…]}.

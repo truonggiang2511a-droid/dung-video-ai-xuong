@@ -28,7 +28,7 @@ video.clip{width:100%;height:100%;object-fit:cover;transform-origin:50% 38%}
 .sub{position:absolute;top:67%;left:70px;right:160px;text-align:center;font:900 76px/1.12 BVP;text-transform:uppercase}
 .sub b{display:inline-block;margin:0 .14em;color:#fff;-webkit-text-stroke:10px #000;paint-order:stroke fill;font-weight:900}
 /* CTA */
-.cta{position:absolute;bottom:22%;left:70px;right:160px;text-align:center;border-radius:24px;padding:34px 20px;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.cta{position:absolute;top:47%;left:70px;right:160px;text-align:center;border-radius:24px;padding:34px 20px;box-shadow:0 20px 40px rgba(0,0,0,.4)}
 .cta span{font:900 62px/1.1 BVP;color:#14161a}
 /* progress bar */
 .prog{position:absolute;top:0;left:0;height:12px;width:100%;transform-origin:0 50%}
@@ -48,24 +48,26 @@ video.cut{z-index:4;object-fit:cover;transform-origin:50% 38%}
 .sub.low{top:75%}
 
 /* VÙNG AN TOÀN TikTok/Reels (1080×1920): trên ~9 % là thanh tab, dưới ~21 % là chú thích + nhạc, phải ~150 px là nút tim/bình luận
-   → chữ lớn bắt đầu từ 11 %, phụ đề 67 % chừa lề phải 160 px, nút kết ở 22 % đáy */
+   → chữ lớn bắt đầu từ 11 %, phụ đề 67 % chừa lề phải 160 px.
+   KHÔNG ĐÈ CHỮ (4/11): vùng trên 11–42 % chữ điểm nhấn · giữa 45–60 % nhãn / nút kết (không cùng lúc) · dưới 67–76 % phụ đề.
+   Kiểm bằng test/overlap.cjs (đo khung chữ thật mỗi 0,25 s). */
 
 /* NHÃN — làm lại từ kho lower-third HyperFrames (Apache 2.0): lt-color-block · lt-kicker-name · lt-stack-bars · lt-soft-pill · lt-mask-reveal */
 [data-tpl=label]{z-index:3}
-.lt{position:absolute;left:64px;top:55%;max-width:calc(100% - 240px);display:inline-flex;flex-direction:column;align-items:flex-start}
-.lt .ln{font:400 86px/0.98 Anton;letter-spacing:1px;text-transform:uppercase}
+.lt{position:absolute;left:64px;top:49%;max-width:calc(100% - 240px);display:inline-flex;flex-direction:column;align-items:flex-start}
+.lt .ln{font:400 86px/0.98 Anton;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
 .lt .ls{font:900 34px/1.15 Mont;letter-spacing:1px}
 .lt-block{background:var(--acc);padding:18px 34px 22px 30px;box-shadow:0 16px 44px rgba(0,0,0,.35);gap:6px}
-.lt-block .ln{color:#14161a}.lt-block .ls{color:rgba(20,22,26,.8)}
+.lt-block .ln{color:#14161a;font-size:var(--lfs,86px)}.lt-block .ls{color:rgba(20,22,26,.8)}
 .lt-kicker .lk{background:var(--acc);color:#14161a;font:900 40px/1 Mont;padding:10px 18px;border-radius:10px;margin-bottom:12px}
-.lt-kicker .ln{font-size:118px;color:#fff;text-shadow:0 6px 0 rgba(0,0,0,.45),0 0 30px rgba(0,0,0,.5)}
+.lt-kicker .ln{font-size:var(--lfs,118px);color:#fff;text-shadow:0 6px 0 rgba(0,0,0,.45),0 0 30px rgba(0,0,0,.5)}
 .lt-kicker .lr{height:9px;width:100%;margin-top:10px;background:var(--acc);transform-origin:0 50%;border-radius:5px}
-.lt-bars .ln{background:#14161a;color:#fff;padding:22px 28px 10px}
+.lt-bars .ln{background:#14161a;color:#fff;padding:22px 28px 10px;font-size:var(--lfs,86px)}
 .lt-bars .ls{background:var(--acc);color:#14161a;padding:10px 28px;margin-left:44px}
 .lt-pill{flex-direction:row;align-items:center;gap:18px;background:#fff;border-radius:999px;padding:16px 36px 16px 26px;box-shadow:0 14px 34px rgba(0,0,0,.35)}
 .lt-pill .dot{width:26px;height:26px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 6px rgba(0,0,0,.08)}
-.lt-pill .ln{font:900 50px/1.1 Mont;color:#14161a;letter-spacing:0}
-.lt-mask{position:relative}.lt-mask .ln{padding-top:26px;margin-top:-26px;font-size:120px;color:#fff;text-shadow:0 6px 0 rgba(0,0,0,.45)}
+.lt-pill .ln{font:900 var(--lfs,50px)/1.1 Mont;color:#14161a;letter-spacing:0}
+.lt-mask{position:relative}.lt-mask .ln{padding-top:26px;margin-top:-26px;font-size:var(--lfs,120px);color:#fff;text-shadow:0 6px 0 rgba(0,0,0,.45)}
 .lt-mask .ls{color:#fff;text-shadow:0 3px 8px rgba(0,0,0,.7);margin-top:4px}
 .lt-mask .sweep{position:absolute;inset:0 -12px;background:var(--acc);z-index:2}
 
@@ -84,7 +86,7 @@ video.cut{z-index:4;object-fit:cover;transform-origin:50% 38%}
 
 /* NÚT THEO DÕI (tiktok-follow / instagram-follow, không logo hãng) */
 [data-tpl=cta-follow]{z-index:6}
-.fol{position:absolute;bottom:22%;left:70px;right:160px;display:flex;align-items:center;gap:24px;background:rgba(16,18,22,.88);border:2px solid rgba(255,255,255,.12);border-radius:30px;padding:24px 26px;box-shadow:0 20px 44px rgba(0,0,0,.45)}
+.fol{position:absolute;top:45%;left:70px;right:160px;display:flex;align-items:center;gap:24px;background:rgba(16,18,22,.88);border:2px solid rgba(255,255,255,.12);border-radius:30px;padding:24px 26px;box-shadow:0 20px 44px rgba(0,0,0,.45)}
 .fol .av{flex:none;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;font:400 70px/1 Anton;color:#fff;border:4px solid #fff}
 .fol .fi{flex:1;min-width:0}.fol .fn{font:900 46px/1.1 BVP;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fol .fs{font:900 28px/1.2 Mont;color:#c9ced6;margin-top:6px}

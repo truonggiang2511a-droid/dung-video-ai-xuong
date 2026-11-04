@@ -3,7 +3,7 @@
 // Thêm lỗi mới: lấy state.json của job lỗi → node test/cut-regress.mjs --add <state.json> <tên> "<ghi chú>" "<câu bỏ, vd 5-11>"
 import fs from 'node:fs';
 import path from 'node:path';
-import { retakeGuess, finalize, localPlan, silenceCuts } from '../lib/pipeline.mjs';
+import { retakeGuess, finalize, localPlan, silenceCuts, analyzeText } from '../lib/pipeline.mjs';
 import { parseLoose } from '../lib/ai.mjs';
 const DIR = path.join(import.meta.dirname, 'loi-cat');
 if (process.argv[2] === '--add') {
@@ -22,7 +22,10 @@ for (const f of fs.readdirSync(DIR).filter(f => f.endsWith('.json'))) {
   // cắt hết quy trình như khi AI lỗi (không cần âm thanh: không có khoảng lặng)
   const end = ss[ss.length - 1].end + 1;
   const job = { dir: '/tmp', genre: 'bds', format: '9:16', words: t.words, sentences: ss, autoDrops: [], fillCuts: t.fillCuts || [], silences: t.silences || [], mumbleCuts: t.mumbleCuts || [], media: [{ file: 'aroll.mp4', main: true, dur: t.dur || end }] };
-  const p = localPlan({ sentences: ss, auto_cut: [], brolls: [], cta_default: 'X' });
+  const auto = analyzeText(ss, t.words).drops;
+  job.autoDrops = auto;
+  for (const i of t.expect.ekip || []) ok(auto.some(d => d.why === 'ekip' && d.from === i), `câu ${i} “${ss[i].text}” = nói với người quay → bỏ`);
+  const p = localPlan({ sentences: ss, auto_cut: auto.map(d => ({ i: d.from, why: d.why })), brolls: [], cta_default: 'X' });
   p.drop = retakeGuess(ss);
   finalize(job, p);
   const inDrop = w => job.drops.some(d => w.s >= d.a - 0.05 && w.e <= d.b + 0.05);
@@ -33,6 +36,11 @@ for (const f of fs.readdirSync(DIR).filter(f => f.endsWith('.json'))) {
     ok(!left.length, `vạch đỏ “cắt khoảng lặng” nào cũng bị xoá thật (${sc.length} chỗ)${left.length ? ' — sót: ' + left.map(x => x.join('-')).join(' ') : ''}`);
     const maxP = Math.max(0, ...t.silences.map(([a, b]) => inSeg(a, b)));
     ok(maxP <= (t.expect.maxPause || 0.45) + 0.001, `chỗ im lặng còn lại dài nhất ${maxP.toFixed(2)} s (≤ ${t.expect.maxPause || 0.45} s)`);
+    if (t.expect.maxGap) {
+      const W = t.words; let g = 0, at = 0;
+      for (let i = 0; i + 1 < W.length; i++) { const a = W[i].e - W[i].s > 1.2 ? W[i].s + 0.5 : W[i].e; if (W[i + 1].s - a > 0.6) { const k = inSeg(a, W[i + 1].s); if (k > g) { g = k; at = a; } } }
+      ok(g <= t.expect.maxGap + 0.001, `khoảng KHÔNG có lời còn lại dài nhất ${g.toFixed(2)} s tại ${at.toFixed(1)} (≤ ${t.expect.maxGap} s)`);
+    }
   }
   if (t.expect.keepAll) ok(!lost.length, `không mất chữ ngoài đoạn bỏ${lost.length ? ': ' + lost.slice(0, 8).map(w => `${w.w}@${w.s.toFixed(1)}`).join(' ') : ''}`);
   for (const [a, b] of t.expect.retakes) { const sa = ss[a].start, sb = ss[b].end; ok(job.drops.some(d => d.a <= sa + 0.3 && d.b >= sb - 0.3), `đoạn câu ${a}–${b} (${sa.toFixed(1)}–${sb.toFixed(1)} s) đã bị bỏ`); }

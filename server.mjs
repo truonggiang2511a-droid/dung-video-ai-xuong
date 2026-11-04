@@ -51,6 +51,7 @@ function serveFile(req, res, file) {
 
 async function pipeline(j) {
   j.status = 'running'; j.error = ''; j.steps = []; j.timeline = null; j.ops = null; j.aiCost = 0; j.aiSec = 0; j.live = { seq: 0 };
+  j.render = null; j.chat = null; j.version = (j.version || 0) + 1; j.approved = false; // “Dựng lại” dùng lại file đã tải (bộ nhớ phân tích giúp nhanh)
   const t0 = Date.now();
   // live = những gì trang cần để vẽ quá trình dựng trực tiếp (giây gốc của video chính)
   const live = o => { Object.assign(j.live, o); j.live.seq++; };

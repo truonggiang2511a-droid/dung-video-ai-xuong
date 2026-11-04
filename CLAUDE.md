@@ -33,6 +33,11 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
 `XUONG_AI=local XUONG_KEY=test123 node server.mjs` rồi `SIZE=1440x900 EXPORT=1 node test/ui.cjs` (và `SIZE=390x844`).
 Đường Claude kiểm bằng CLI giả `test/fake-claude` (đặt vào PATH) — KHÔNG phải AI thật.
 
+## LUẬT CỨNG: KHÔNG ĐÈ CHỮ (Giang 4/11 16:21)
+- Vùng dọc (9:16): **11–42 %** chữ điểm nhấn/hook · **45–60 %** nhãn (49 %) HOẶC nút kết (47 %) / theo dõi (45 %) — không cùng lúc · **67–76 %** phụ đề.
+  Nhãn luôn 1 dòng (`--lfs` tự thu nhỏ theo độ dài). Đổi vị trí bất kỳ khối chữ nào → chạy `node test/overlap.cjs file://…/index.html` (đo khung chữ
+  thật mỗi 0,25 s, báo ❌ cặp đè). 4/11: bắt đúng “NHẮN TIN XEM NHÀ NGAY” đè phụ đề “trồng cây xanh” + chương “LẦU 2 VÀ SÂN THƯỢNG” 2 dòng đè phụ đề.
+
 ## LUẬT CỨNG: không để cắt thoại sai lặp lại (Giang yêu cầu 4/11 15:33)
 - Mỗi lần Giang báo **cắt sai** → (1) lấy `state.json` của job lỗi trên laptop, (2) sửa luật, (3) lưu thành bài kiểm tra:
   `node test/cut-regress.mjs --add <state.json> <ten-loi> "<ghi chú>" "<câu phải bỏ, vd 5-11>"` (lưu lời chép + đáp án vào `test/loi-cat/`).
@@ -112,4 +117,16 @@ Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. L�
   im lặng). Sửa: `silenceCuts(job)` = MỘT nguồn cho cả vạch đỏ (server gửi `live.silences`) lẫn lúc cắt; lặng ≥ 0,45 s cắt theo âm thanh (không trừ lõi chữ,
   còn 0,25 s nghỉ), ngắn hơn mới trừ lõi chữ; lúc xong trang xoá hết vạch, vẽ lại đúng `job.cuts` (đoạn AI đề nghị mà chốt an toàn giữ lại thì vạch biến mất).
   Dữ liệu thật: 25 vạch = 25 chỗ xoá thật, im lặng sót dài nhất 0,40 s (trước 1,15 s), không mất chữ. Bài kiểm tra `nha-xinh-noi-lai` giờ kèm `silences` đo từ âm thanh.
+- 2026-11-04 16:21 (Giang, căn LJN1n4GmxcIHWLBj — 13 cảnh phụ): (1) **chỉ 3/13 cảnh vào video**: Haiku “nghĩ” hết `max_tokens` 16 000 (~16 k token ra,
+  0,0094 USD) → kế hoạch cụt giữa `brolls` → nâng 48 000 + `job.aiStop/aiTruncated` + **`fillBrolls`** (máy ghép bù cảnh chưa dùng: so TÊN FILE khách đặt
+  + nhãn AI nhìn với lời nói, GIỮ DẤU khi so — bỏ dấu thì “tiện”=“tiền”; chữ chung “lầu/phòng/sân” đứng 1 mình không tính; câu giới thiệu tổng quát 12 %
+  đầu bị trừ điểm; không khớp thì không ép) → 13/13 cảnh đúng lời; bộ dự phòng cũng dùng cách này thay vì rải đều. (2) **khoảng không lời có tiếng động
+  còn sót 1–2 s** (150–155 s) → mọi khoảng ≥ 0,9 s không có chữ đều cắt (chừa 0,15 s). (3) “Đấy, anh ơi.” = ekip (CUE); vấp đầu câu rồi nói lại ngay
+  (câu ≤ 10 chữ, câu sau trùng ≥ 4 chữ đầu) → `retakeGuess`. (4) **chữ tô màu phải đủ nghĩa**: phụ đề tô cả CỤM (`plan.keywords` + cụm *…* ≥ 2 tiếng +
+  số + đơn vị — `markKeywords`), tiếng đang nói chỉ nảy nhẹ; luật key-pop: tô trọn cụm (*CÂY XANH*, *ĐỌC SÁCH*). (5) **SFX to hơn**: 3 file chuẩn đỉnh −2 dB
+  (trước −12/−24/−19 dB), `SFX_VOL`. (6) **chỉnh màu tự động** `DEFAULT_GRADE` bão hoà 1,15 · sáng 1,10 · tương phản 1,05 = CSS `filter` trên mọi
+  `video.clip` (kể cả lớp người tách nền; kiểu vào zoom/blur ghép chung filter) — xuất không chậm hơn (55 s vs 62 s / 8 s); nét +10 % = `unsharp=5:5:0.35`
+  lúc đổi file (cache `VER` v4); chat `{"op":"grade"}` / localCommand “bớt sáng”, “màu rực hơn”, “tắt chỉnh màu”. (7) nút **↻ Dựng lại** (POST start lại,
+  dùng file đã tải + bộ nhớ phân tích). Bài kiểm tra mới `lang-dai-hoc-tieng-dong`.
+- 2026-11-04: sửa bằng `re.sub(count=1)` trúng NHẦM lệnh start của nút “AI dựng video” (`${id}` → `${job.id}`) → ui.cjs bắt được (kẹt ở bước mở trình dựng). Luôn chạy ui.cjs sau khi sửa trang.
 - HyperFrames có gói trả phí "HyperFrames Pro" (templates, style-sampling) và bật telemetry mặc định → `npx hyperframes telemetry disable`.

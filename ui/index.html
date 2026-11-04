@@ -124,7 +124,7 @@ hyperframes-player{height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;
 </section>
 
 <section id="ed" class="hidden">
-  <div class="top"><button class="btn ghost" id="back">‹ Mới</button><div class="t" id="title">Đang dựng…</div><span class="ai" id="aiName"></span><button class="btn" id="exp" disabled>Xuất</button></div>
+  <div class="top"><button class="btn ghost" id="back">‹ Mới</button><div class="t" id="title">Đang dựng…</div><span class="ai" id="aiName"></span><button class="btn ghost hidden" id="redo" title="Dựng lại video này bằng bản AI mới nhất (không cần tải lại file)">↻ Dựng lại</button><button class="btn" id="exp" disabled>Xuất</button></div>
   <div id="story" class="story hidden" onclick="if(!event.target.closest('.pt'))this.classList.toggle('open')"><div class="sum"></div><div class="meta"></div><div class="parts"></div></div>
   <div class="main">
     <div class="view"><hyperframes-player id="pl" controls runtime-src="/ui/hyperframe.runtime.iife.js"></hyperframes-player><div class="wait" id="wait">AI đang dựng…</div></div>
@@ -197,6 +197,12 @@ $('#go').onclick = async () => {
   } catch (e) { alert(e.message); $('#go').disabled = false; $('#go').textContent = 'AI dựng video'; }
 };
 $('#back').onclick = () => { location.hash = ''; location.reload(); };
+$('#redo').onclick = async () => {
+  if (!confirm('Dựng lại video này từ đầu bằng bản AI mới nhất? Các chỗ đã sửa bằng chat sẽ mất.')) return;
+  $('#redo').disabled = true;
+  try { await api(`jobs/${job.id}/start`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ genre: job.genre }) }); location.reload(); }
+  catch (e) { $('#redo').disabled = false; alert('Không dựng lại được: ' + e.message); }
+};
 
 // ---------- màn dựng ----------
 const cur = $('#cur'), tip = $('#tip');
@@ -239,6 +245,7 @@ async function openJob(id) {
   await replay(ops, live.on);
   idle('Xong. Bấm vào clip để nhờ AI sửa, hoặc gõ yêu cầu vào ô chat. Ưng rồi thì bấm <b>Xuất</b>.');
   $('#exp').disabled = false;
+  $('#redo').classList.remove('hidden');
   if (job.render?.status === 'done') showDone(job.render);
 }
 
