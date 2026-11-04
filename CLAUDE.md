@@ -61,4 +61,10 @@ Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. L�
   khung to hơn ngưỡng lặng = nói vấp → cắt (bắt được 212,72–214,90). (3) **ít điểm nhấn** (10 chữ / 166 s) → brief có `target.texts`
   = thời lượng/5 + luật mật độ. (4) **icon che chữ** (icon đặt góc phải cố định) → đưa vào trong khối chữ. Kèm: bản đổi file bằng AMF
   cqp nặng 13 Mbit/s (aroll 372 MB) → giới hạn 6–9 Mbit/s.
+- 2026-11-04 14:31 (Giang chat “làm chữ HOOK ấn tượng to ẩn sau nhân vật”, AI trả lời “chưa hỗ trợ”): HyperFrames CÓ `remove-background`
+  (mô hình chạy trên máy, ra WebM trong suốt). Làm: `props.behind` → `makeCutouts` cắt đúng đoạn video chính dưới chữ → tách nền → clip
+  `cutout` (z-index 4 > chữ 3, zoom khớp đoạn video bên dưới); `props.big` = hook chữ cực to; `props.emoji` + `emojiSize:"big"` = emoji 520 px.
+  Thử trên Aroll Nhà Xinh 8 s: tách nền 3 s mất 92 s (2 nhân, 1,4 khung/giây), chữ “KHU” nằm sau đầu chị, xuất MP4 OK (90 s).
+  Chat chạy NỀN (`j.chat`, trang hỏi lại) vì đường hầm cắt yêu cầu > 100 s. Xem nhanh trên iPhone: Safari không phát WebM trong suốt → bản
+  xem nhanh có thể thấy chữ trước người, MP4 xuất vẫn đúng.
 - HyperFrames có gói trả phí "HyperFrames Pro" (templates, style-sampling) và bật telemetry mặc định → `npx hyperframes telemetry disable`.

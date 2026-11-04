@@ -66,6 +66,10 @@ Trả mảng thao tác, chỉ đụng đúng chỗ khách nhờ:
   {"op": "add", "clip": {"type": "text", "tpl": "key-pop", "start": 3.0, "dur": 2.2, "props": {"text": "HẺM *XE HƠI*"}}, "why": ""}
 ]
 ```
-- `props` hợp lệ: `text`, `lead`, `sub`, `color` (giá: red|green|gold|blue; chữ khác: mã màu #RRGGBB), `icon`.
+- `props` hợp lệ: `text`, `lead`, `sub`, `color` (giá: red|green|gold|blue; chữ khác: mã màu #RRGGBB), `icon`,
+  `emoji` (khoá trong `emojis` — hình 3D động gắn trên chữ), `emojiSize` ("big" = to khoảng nửa khung hình),
+  `big` (true = chữ CỰC TO, hợp với hook), `behind` (true = chữ nằm SAU người nói: máy tự tách người khỏi nền — LÀM ĐƯỢC, đừng từ chối).
+- “chữ hook to, ẩn sau nhân vật” → `{"op":"update","id":"hook","props":{"big":true,"behind":true},"dur":3}`.
+- “thêm icon BĐS to nửa khung hình” → `props.emoji` = khoá hợp nghĩa (vd house-with-garden) + `emojiSize: "big"`.
 - Đổi kiểu chữ = `update` với `tpl` (`price-red|spec-gold|key-pop|hook-band|cta`).
 - Không bịa số. Khách nói chung chung ("đẹp hơn") → chọn 1–3 thay đổi rõ ràng nhất. Khi trả JSON trực tiếp thì bọc: {"ops":[…]}.

@@ -69,7 +69,7 @@ hyperframes-player{height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;
 .clip.sel{outline:2px solid #fff;outline-offset:1px}
 .clip.flash{animation:fl .7s}
 @keyframes fl{0%{box-shadow:0 0 0 0 rgba(209,254,23,.9)}100%{box-shadow:0 0 0 12px rgba(209,254,23,0)}}
-.c-video{background:#4d6a8c;color:#fff}.c-broll{background:#e39a4d}.c-text{background:var(--acc)}.c-icon{background:#ff7aa8}.c-subs{background:#9b8cff}.c-sfx{background:#53d6c0}
+.c-video{background:#4d6a8c;color:#fff}.c-cutout{background:#2f8f6f;color:#fff;top:50%!important}.c-broll{background:#e39a4d}.c-text{background:var(--acc)}.c-icon{background:#ff7aa8}.c-subs{background:#9b8cff}.c-sfx{background:#53d6c0}
 .cutm{position:absolute;top:2px;bottom:2px;z-index:1;border-radius:4px;background:repeating-linear-gradient(135deg,rgba(255,77,77,.85) 0 4px,rgba(255,77,77,.35) 4px 8px);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;transition:opacity .6s,transform .6s}
 .cutm.lang{background:rgba(255,77,77,.55)}
 .cutm.gone{opacity:0;transform:scaleY(.2)}
@@ -136,6 +136,7 @@ hyperframes-player{height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;
 const $ = s => document.querySelector(s);
 const GENRES = [['chung','Chung'],['bds','Bất động sản'],['banhang','Bán hàng'],['amthuc','Ẩm thực'],['kienthuc','Kiến thức'],['vlog','Vlog']];
 const LANES = [['video','Video','🎬'],['broll','Cảnh phụ','🎞'],['text','Chữ','T'],['icon','Icon','★'],['subs','Phụ đề','≡',1],['sfx','Âm thanh','♪',1]];
+const LANE_OF = { cutout: 'video' };
 let key = localStorage.getItem('xuong.key') || '';
 let genre = localStorage.getItem('xuong.genre') || 'bds';
 let job = null, T = null, sel = null, shown = new Set(), version = 0;
@@ -365,7 +366,7 @@ function drawLanes(D) {
   tl.innerHTML = r + '</div>' + LANES.map(([k, , , sh]) => `<div class="lane ${sh ? 'short' : ''}" data-k="${k}"></div>`).join('') + '<div class="ph" id="ph"></div>';
   $('#names').innerHTML = LANES.map(([k, n, i, sh]) => `<div class="${sh ? 'short' : ''}" data-i="${i}">${n}</div>`).join('');
 }
-const laneOf = c => c.type;
+const laneOf = c => LANE_OF[c.type] || c.type;
 function label(c) { return (c.props?.text || c.name || (c.type === 'video' ? 'Video chính' : c.type === 'sfx' ? '♪' : c.props?.icon || c.tpl || '')).replace(/\*/g, ''); }
 function drawClips(T) {
   document.querySelectorAll('.clip').forEach(e => e.remove());
@@ -432,7 +433,16 @@ async function sendChat() {
   const box = document.querySelector(sel ? `.clip[data-id="${sel}"]` : '.clip.c-text');
   if (box) { const b = box.getBoundingClientRect(); moveCur(b.left + 10, b.top + 6); }
   try {
-    const r = await api(`jobs/${job.id}/chat`, { method: 'POST', body: JSON.stringify({ text, target: sel }) });
+    const { n } = await api(`jobs/${job.id}/chat`, { method: 'POST', body: JSON.stringify({ text, target: sel }) });
+    let j;
+    for (;;) { // AI sửa chạy nền (tách người khỏi nền có thể lâu) → hỏi lại mỗi 1,5 s
+      await sleep(1500);
+      j = await api('jobs/' + job.id);
+      if (j.chat?.n === n && j.chat.status !== 'running') break;
+      if (j.chat?.say) say(j.chat.say);
+    }
+    if (j.chat.status === 'error') throw new Error(j.chat.error);
+    const r = { ops: j.chat.ops, timeline: j.timeline, version: j.chat.version };
     T = r.timeline; version = r.version;
     drawClips(T); showAll();
     if (r.ops.length) { await replay(r.ops.map(o => ({ ...o, id: o.id })), true); log(r.ops.map(o => '✓ ' + o.say).join('<br>'), 'ai'); }

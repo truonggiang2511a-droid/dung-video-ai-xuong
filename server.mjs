@@ -145,17 +145,22 @@ http.createServer(async (req, res) => {
       return send(res, 200, pub);
     }
     if (act === 'chat' && req.method === 'POST') {
+      // chạy nền: tách người khỏi nền có thể mất > 100 s (đường hầm cắt yêu cầu dài) → trang hỏi lại trạng thái j.chat
       const b = await body(req);
       if (j.status !== 'done') return send(res, 409, { error: 'Video chưa dựng xong' });
-      j.busy = true; save(j);
-      const t0 = Date.now();
-      try {
-        const ops = await chat(j, String(b.text || '').slice(0, 500), b.target, s => step(j, s));
-        j.timeline = JSON.parse(fs.readFileSync(path.join(j.dir, 'timeline.json'), 'utf8'));
-        j.version = (j.version || 0) + 1; j.approved = false;
-        step(j, `Sửa theo chat: ${ops.length} thao tác (${Math.round((Date.now() - t0) / 1000)} s)`);
-        return send(res, 200, { ops, timeline: j.timeline, version: j.version });
-      } finally { j.busy = false; save(j); }
+      if (j.chat?.status === 'running') return send(res, 409, { error: 'AI đang sửa yêu cầu trước' });
+      const n = (j.chat?.n || 0) + 1, t0 = Date.now();
+      j.chat = { status: 'running', n, t0 }; save(j);
+      chat(j, String(b.text || '').slice(0, 500), b.target, s => { step(j, s); j.chat.say = s; })
+        .then(ops => {
+          j.timeline = JSON.parse(fs.readFileSync(path.join(j.dir, 'timeline.json'), 'utf8'));
+          j.version = (j.version || 0) + 1; j.approved = false;
+          j.chat = { status: 'done', n, ops, version: j.version };
+          step(j, `Sửa theo chat: ${ops.length} thao tác (${Math.round((Date.now() - t0) / 1000)} s)`);
+        })
+        .catch(e => { j.chat = { status: 'error', n, error: e.message }; step(j, 'Sửa lỗi: ' + e.message); })
+        .finally(() => save(j));
+      return send(res, 200, { n });
     }
     if (act === 'render' && req.method === 'POST') {
       if (j.render?.status === 'running') return send(res, 409, { error: 'Đang xuất' });
