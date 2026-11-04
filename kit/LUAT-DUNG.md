@@ -34,8 +34,9 @@ Chỉ ra các câu PHẢI BỎ (`from`/`to` = số câu, gồm cả 2 đầu, kh
   Giữ LẦN SAU CÙNG đầy đủ nhất, bỏ các lần trước bị hỏng / ngắt / vấp. Câu bỏ dở giữa chừng (vd "Và ở đây.") cũng bỏ.
 - `ekip`: lời nói với người quay, không phải cho khán giả ("lại nha", "em lia từ trên đúng không", "xong chị bước qua", "cắt", "được chưa").
 - `lap`: câu chào / kết lặp liền nhau ("Xin chào! Xin chào!").
+`retake_hint` = các đoạn MÁY ĐOÁN là nói hỏng (dừng ≥ 3 s rồi nói lại cùng ý) — đọc kỹ, đúng thì đưa vào `drop` (có thể chỉnh `from`/`to`).
 KHÔNG bỏ: câu nội dung chỉ nói 1 lần; câu mở đầu dù sau đó nhắc lại số liệu; phần tóm tắt cuối; giá / thông tin chỉ có ở 1 chỗ.
-Không chắc thì KHÔNG bỏ. Máy sẽ kiểm lại (đoạn bỏ có số mà phần giữ không có → không bỏ).
+Không chắc thì KHÔNG bỏ. JSON phải hợp lệ: trong chuỗi KHÔNG dùng dấu nháy kép " (trích lời thì dùng “ ” hoặc '). Máy sẽ kiểm lại (đoạn bỏ có số mà phần giữ không có → không bỏ).
 
 ### 1a'. Sửa chính tả lời chép → `fix` (cho phụ đề đúng)
 Máy chép lời hay sai TÊN RIÊNG và từ gần âm. Theo ngữ cảnh, liệt kê `"fix": [{"sai": "Cần Dũ", "dung": "Cần Giuộc"}, {"sai": "trợ Bình Chánh", "dung": "chợ Bình Chánh"}]`

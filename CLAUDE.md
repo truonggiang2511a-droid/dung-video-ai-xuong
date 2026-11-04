@@ -88,4 +88,10 @@ Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. L�
   Kèm: AI trả `fix` sửa chính tả tên riêng trong phụ đề (“Cần Dũ” → “Cần Giuộc”, “trợ” → “chợ”) — `applyFixes` thay chuỗi chữ liên tiếp, giữ giờ.
 - 2026-11-04 15:20: nhãn `mask`/`bars` dùng `clip-path` → cắt mất dấu tiếng Việt phía trên (“BẾP MỞ” → “BEP MƠ”) → thêm padding-top.
 - 2026-11-04: cảnh phụ “Đăng tiktok cô thùy 2” là video ĐÃ DỰNG (có chữ, phụ đề đóng cứng) → ghép vào bị chồng 2 lớp chữ. Nên dặn khách gửi cảnh quay gốc.
+- 2026-11-04 15:27 (Giang: “vẫn cắt thoại sai, lỗi như cũ”): job NcaHiydzHDTj_s4_ — Haiku trả JSON hỏng 1 ký tự (dòng 38) → `JSON.parse` lỗi →
+  bỏ CẢ kế hoạch → bộ dự phòng (không biết bắt nói lại) → đoạn nói hỏng 35,8–82,5 s còn nguyên. Sửa 2 lớp: (1) `parseLoose` trong ai.mjs: thoát dấu "
+  trong chuỗi, bỏ phẩy thừa, không được thì nhặt từng mục `objs()` (`_salvaged`); lưu bản AI viết ra `jobs/<id>/ai-plan.txt` để soi; luật dặn không dùng " trong chuỗi.
+  (2) `retakeGuess` (máy tự đoán nói lại: dừng ≥ 3 s / buột 1–2 chữ / “lại nha” → câu 60 s trước có ≥ 40 % cặp chữ lặp lại trong 40 s sau) → gửi AI dạng
+  `retake_hint`; AI lỗi hoặc mất `drop` thì dùng luôn (vẫn qua `checkDrops`). 3 bản chép lời thật đều ra câu 5–11; 10+ video thử khác không bắt nhầm.
+  Mô phỏng AI hỏng trên dữ liệu thật: cắt 63 s → còn 161 s, không mất chữ nào ngoài đoạn bỏ (trừ chữ Whisper kéo dài qua chỗ vấp).
 - HyperFrames có gói trả phí "HyperFrames Pro" (templates, style-sampling) và bật telemetry mặc định → `npx hyperframes telemetry disable`.
