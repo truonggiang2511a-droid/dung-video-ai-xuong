@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+// giả lập Claude Code để kiểm đường ống (không phải AI thật)
+const fs = require('fs'); const a = process.argv.join(' ');
+if (/task 1/.test(a)) { const b = JSON.parse(fs.readFileSync('brief.json','utf8'));
+  fs.writeFileSync('plan.json', JSON.stringify({ hook:{text:'NHÀ PHỐ NGUYỄN VĂN LINH',sub:'Mặt tiền kinh doanh',why:'tên đường + ý hấp dẫn'},
+    texts:[{tpl:'spec-gold',start:3.2,dur:2.4,lead:'DIỆN TÍCH',text:'52 M²',sub:'1 trệt · 2 lầu',icon:'ruler',why:'người nói nhắc diện tích'},
+           {tpl:'key-pop',start:6.0,dur:2.2,lead:'',text:'SỔ HỒNG *RIÊNG*',sub:'',icon:'check',why:'ý pháp lý'}],
+    brolls:b.brolls.map(x=>({file:x.file,start:5.0,dur:2.2,from:0.2,tpl:'whip',why:'nhắc mặt tiền'})), cta:'NHẮN TIN XEM NHÀ NGAY' })); }
+else { fs.writeFileSync('ops.json', JSON.stringify([{op:'update',id:'t1',props:{color:'#5cc8ff'},why:'khách muốn chữ sổ hồng màu xanh'}])); }
+console.log(JSON.stringify({ result:'ok', total_cost_usd: 0.012 }));

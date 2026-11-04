@@ -1,0 +1,8 @@
+{
+  "name": "dung-video-ai-xuong",
+  "private": true,
+  "type": "module",
+  "description": "Xưởng dựng HyperFrames chạy trên laptop cho app Dựng Video AI (chỉ thử nội bộ)",
+  "scripts": { "start": "node server.mjs" },
+  "dependencies": { "hyperframes": "0.9.10" }
+}

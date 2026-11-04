@@ -1,0 +1,12 @@
+# Cấu hình máy dựng — mở bằng Notepad, điền khoá, lưu lại. KHÔNG gửi file này cho ai.
+# Khoá API Claude riêng cho máy dựng: console.anthropic.com → API Keys → Create Key
+# (nên tạo khoá RIÊNG cho máy dựng và đặt hạn mức chi tiêu tháng trong Anthropic)
+ANTHROPIC_API_KEY=
+
+# Bộ não AI: api = Claude Haiku qua khoá API (rẻ, phục vụ khách được)
+#            claude = Claude Code trên máy (gói Claude cá nhân — CHỈ thử nội bộ) · local = không dùng AI
+XUONG_AI=api
+
+# Số việc nặng chạy cùng lúc (laptop 12 nhân, 15 GB RAM: đổi file 2, xuất video 2). Khách sau xếp hàng.
+XUONG_CPU=2
+XUONG_RENDER=2
