@@ -142,7 +142,7 @@ http.createServer(async (req, res) => {
       if (live && live.seq !== since) { // gửi phần đang dựng (chỉ khi có thay đổi)
         pub.live = { ...live, media: (j.media || []).map(({ name, dur, main, ready, file }) => ({ name, dur, main, ready, file })),
           words: (j.words || []).map(w => [w.w, Math.round(w.s * 100) / 100, Math.round(w.e * 100) / 100]),
-          silences: [...(j.silences ? silenceCuts(j) : []), ...(j.mumbleCuts || [])], // chỉ chỗ sẽ cắt thật autoDrops: (j.autoDrops || []).map(d => ({ ...d, a: sentences?.[d.from]?.start, b: sentences?.[d.to]?.end })),
+          silences: [...(j.silences ? silenceCuts(j) : []), ...(j.mumbleCuts || [])], /* chỉ chỗ sẽ cắt thật */ autoDrops: (j.autoDrops || []).map(d => ({ ...d, a: sentences?.[d.from]?.start, b: sentences?.[d.to]?.end })),
           sentences: (sentences || []).map(x => [x.start, x.end]) };
       }
       if (!url.searchParams.has('admin')) { delete pub.ai; delete pub.aiCost; delete pub.aiSec; }
@@ -155,11 +155,13 @@ http.createServer(async (req, res) => {
       if (j.chat?.status === 'running') return send(res, 409, { error: 'AI đang sửa yêu cầu trước' });
       const n = (j.chat?.n || 0) + 1, t0 = Date.now();
       j.chat = { status: 'running', n, t0 }; save(j);
-      chat(j, String(b.text || '').slice(0, 500), b.target, s => { step(j, s); j.chat.say = s; })
-        .then(ops => {
+      const text = String(b.text || '').slice(0, 800);
+      chat(j, text, b.target, s => { step(j, s); j.chat.say = s; })
+        .then(({ ops, say }) => {
           j.timeline = JSON.parse(fs.readFileSync(path.join(j.dir, 'timeline.json'), 'utf8'));
           j.version = (j.version || 0) + 1; j.approved = false;
-          j.chat = { status: 'done', n, ops, version: j.version };
+          j.chat = { status: 'done', n, ops, say, version: j.version };
+          (j.chatLog = j.chatLog || []).push({ t: Date.now(), text, target: b.target || '', say, ops: ops.map(o => o.op + ':' + (o.id || '')) }); // lưu để soi khi khách báo AI không hiểu
           step(j, `Sửa theo chat: ${ops.length} thao tác (${Math.round((Date.now() - t0) / 1000)} s)`);
         })
         .catch(e => { j.chat = { status: 'error', n, error: e.message }; step(j, 'Sửa lỗi: ' + e.message); })

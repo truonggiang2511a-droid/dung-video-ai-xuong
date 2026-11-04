@@ -33,6 +33,17 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
 `XUONG_AI=local XUONG_KEY=test123 node server.mjs` rồi `SIZE=1440x900 EXPORT=1 node test/ui.cjs` (và `SIZE=390x844`).
 Đường Claude kiểm bằng CLI giả `test/fake-claude` (đặt vào PATH) — KHÔNG phải AI thật.
 
+## CHAT SỬA VIDEO — AI làm được như editor (Giang 4/11 16:48: “yêu cầu gì AI cũng không hiểu”)
+- Trước đây AI chat chỉ thấy danh sách clip (KHÔNG có lời thoại, KHÔNG có cảnh phụ) + 3 thao tác → 3/4 lần trả `{"ops":[]}` → trang báo “chưa hiểu”.
+- Giờ `chat.json` có `transcript` (lời theo GIỜ TIMELINE), `brolls` (file, tên, `parts[].thay`), `settings`; AI trả `{"say","ops"}` — `say` LUÔN có
+  (làm gì / vì sao không làm được + cách gần nhất), hiện ở thanh trạng thái (điện thoại không có ô nhật ký). Thao tác: `update` (kể cả đổi `file`/`from`
+  cảnh phụ) · `remove` · `add` (text/label/fx/**broll** — thay cảnh đang ở đó) · **`cut`** (`rippleCut`: xoá khoảng + dồn, tách đoạn video vắt qua,
+  dời punch/phụ đề) · **`subs`** {scale, pos mid|bottom|low, color, mode meaning|word, hide} · **`texts`** {scale, color} · **`sfx`** {vol, off} ·
+  `grade` · **`replan`** {note} (lập lại kế hoạch với `brief.user_note`, giữ màu/phụ đề/chữ/âm thanh khách đã chỉnh). `localCommand` hiểu các câu
+  thường gặp khi AI lỗi (“cắt đoạn 1:20 đến 1:25”, “phụ đề to hơn đưa lên giữa”, “tiếng vút nhỏ lại”, “chữ to hơn”, “làm lại …”).
+- `j.chatLog` lưu mọi câu khách chat + `say` + thao tác → khách báo “AI không hiểu” thì đọc `state.json` → `chatLog`.
+- Chữ to tự co vừa khung (`fitBig` 1 dòng, `fitKey` ≤ 2 dòng) để “chữ to hơn” không đè nhãn; CSS chỉnh của khách đặt SAU kit.css (đặt trước bị kit.css đè mất).
+
 ## LUẬT CỨNG: KHÔNG ĐÈ CHỮ (Giang 4/11 16:21)
 - Vùng dọc (9:16): **11–42 %** chữ điểm nhấn/hook · **45–60 %** nhãn (49 %) HOẶC nút kết (47 %) / theo dõi (45 %) — không cùng lúc · **67–76 %** phụ đề.
   Nhãn luôn 1 dòng (`--lfs` tự thu nhỏ theo độ dài). Đổi vị trí bất kỳ khối chữ nào → chạy `node test/overlap.cjs file://…/index.html` (đo khung chữ
@@ -129,4 +140,5 @@ Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. L�
   lúc đổi file (cache `VER` v4); chat `{"op":"grade"}` / localCommand “bớt sáng”, “màu rực hơn”, “tắt chỉnh màu”. (7) nút **↻ Dựng lại** (POST start lại,
   dùng file đã tải + bộ nhớ phân tích). Bài kiểm tra mới `lang-dai-hoc-tieng-dong`.
 - 2026-11-04: sửa bằng `re.sub(count=1)` trúng NHẦM lệnh start của nút “AI dựng video” (`${id}` → `${job.id}`) → ui.cjs bắt được (kẹt ở bước mở trình dựng). Luôn chạy ui.cjs sau khi sửa trang.
+- 2026-11-04 16:48: chú thích `// …` chèn giữa dòng object trong server.mjs NUỐT MẤT `autoDrops` của `live` (trang không vẽ câu ekip tự bỏ) → dùng `/* … */`.
 - HyperFrames có gói trả phí "HyperFrames Pro" (templates, style-sampling) và bật telemetry mặc định → `npx hyperframes telemetry disable`.

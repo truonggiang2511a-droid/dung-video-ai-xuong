@@ -29,7 +29,7 @@ const { chromium } = require('playwright');
   await pg.click('.clip[data-id=hook]');
   await pg.fill('#msg', 'đổi màu xanh lá');
   await pg.click('#send');
-  await pg.waitForFunction(() => /Đã sửa|Không có thay đổi|⚠/.test(document.querySelector('#stx').textContent), null, { timeout: 120000 });
+  await pg.waitForFunction(() => /Xem lại|Không có thay đổi|⚠|chưa làm được/.test(document.querySelector('#stx').textContent), null, { timeout: 120000 });
   console.log('chat:', await pg.textContent('#stx'));
   await pg.waitForTimeout(2500);
   await pg.screenshot({ path: `test/out-${W}-5-chat.png` });

@@ -17,7 +17,13 @@ http.createServer((req, res) => {
         texts: [area && { tpl: 'spec-gold', start: area.start + 0.3, dur: 2.4, lead: 'DIỆN TÍCH', text: '52 M²', sub: '1 trệt · 2 lầu', icon: 'ruler', emoji: 'house', why: 'nhắc diện tích' },
                 price && { tpl: 'price-red', start: price.start + 0.2, dur: 2.6, lead: 'GIÁ CHỈ', text: '3 TỶ 990', sub: 'sổ hồng riêng', icon: 'money', emoji: 'money-bag', why: 'nhắc giá' }].filter(Boolean),
         brolls: brief.brolls.map(x => ({ file: x.file, start: (area || ss[1]).start, dur: 2.2, from: 0.3, tpl: 'whip', why: 'cảnh bếp minh hoạ' })), cta: 'NHẮN TIN XEM NHÀ NGAY' };
-    } else out = { ops: [{ op: 'update', id: 't1', props: { color: 'green' }, why: 'khách muốn giá màu xanh lá' }] };
+    } else {
+      const q = brief.request.toLowerCase(), ph = (brief.transcript || []).find(l => /bếp|phòng/.test(l.text));
+      if (/cảnh|bếp/.test(q) && ph) out = { say: `Đã chèn cảnh bếp lúc ${ph.start} s chị nói “${ph.text.slice(0, 20)}”`, ops: [{ op: 'add', clip: { type: 'broll', file: brief.brolls[0].file, from: 0.3, start: ph.start, dur: 2.2, tpl: 'zoom' }, why: 'chèn cảnh bếp đúng lời' }] };
+      else if (/cắt/.test(q)) out = { say: 'Đã cắt đoạn 3–5 s', ops: [{ op: 'cut', from: 3, to: 5, why: 'cắt theo lời khách' }] };
+      else if (/nhạc/.test(q)) out = { say: 'Hiện chưa thêm nhạc nền được; mình có thể tăng âm thanh nhấn cho sôi động hơn.', ops: [] };
+      else out = { say: 'Đã đổi giá sang màu xanh lá', ops: [{ op: 'update', id: 't1', props: { color: 'green' }, why: 'khách muốn giá màu xanh lá' }] };
+    }
     const text = JSON.stringify(out, null, 1);
     res.writeHead(200, { 'content-type': 'text/event-stream' });
     const ev = (t, d) => res.write(`event: ${t}\ndata: ${JSON.stringify(d)}\n\n`);

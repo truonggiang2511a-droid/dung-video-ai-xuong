@@ -487,10 +487,12 @@ async function sendChat() {
     const r = { ops: j.chat.ops, timeline: j.timeline, version: j.chat.version };
     T = r.timeline; version = r.version;
     drawClips(T); showAll();
-    if (r.ops.length) { await replay(r.ops.map(o => ({ ...o, id: o.id })), true); log(r.ops.map(o => '✓ ' + o.say).join('<br>'), 'ai'); }
-    else log('AI chưa hiểu yêu cầu này, Giang thử nói rõ hơn (vd: “đổi chữ giá thành 3,6 TỶ”).', 'ai');
+    const aiSay = j.chat.say ? esc(j.chat.say) : '';
+    if (r.ops.length) { await replay(r.ops.map(o => ({ ...o, id: o.id })), true); log((aiSay ? aiSay + '<br>' : '') + r.ops.map(o => '✓ ' + esc(o.say)).join('<br>'), 'ai'); }
+    else log(aiSay || 'AI chưa làm được yêu cầu này — thử nói cụ thể hơn (vd: “cắt đoạn 1:20 đến 1:25”, “chèn cảnh phòng ngủ lúc chị nói phòng ngủ”).', 'ai');
     loadPlayer();
-    idle(r.ops.length ? `Đã sửa ${r.ops.length} chỗ. Xem lại rồi bấm <b>Xuất</b>.` : 'Không có thay đổi.');
+    // điện thoại không có ô nhật ký → câu AI trả lời hiện ở thanh trạng thái
+    idle(r.ops.length ? `${aiSay || `Đã sửa ${r.ops.length} chỗ.`} Xem lại rồi bấm <b>Xuất</b>.` : (aiSay || 'Không có thay đổi.'));
   } catch (e) { idle('⚠ ' + e.message); log('⚠ ' + e.message, 'ai'); }
   $('#send').disabled = false;
 }
