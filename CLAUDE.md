@@ -32,6 +32,12 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
 `XUONG_AI=local XUONG_KEY=test123 node server.mjs` rồi `SIZE=1440x900 EXPORT=1 node test/ui.cjs` (và `SIZE=390x844`).
 Đường Claude kiểm bằng CLI giả `test/fake-claude` (đặt vào PATH) — KHÔNG phải AI thật.
 
+## LUẬT CỨNG: không để cắt thoại sai lặp lại (Giang yêu cầu 4/11 15:33)
+- Mỗi lần Giang báo **cắt sai** → (1) lấy `state.json` của job lỗi trên laptop, (2) sửa luật, (3) lưu thành bài kiểm tra:
+  `node test/cut-regress.mjs --add <state.json> <ten-loi> "<ghi chú>" "<câu phải bỏ, vd 5-11>"` (lưu lời chép + đáp án vào `test/loi-cat/`).
+- **Trước khi chép code lên laptop / đẩy GitHub: `node test/cut-regress.mjs` phải ra toàn ✅.** Có ❌ = sửa mới làm hỏng lỗi cũ → không giao.
+- Đang có: `nha-xinh-noi-lai` (nói lại 35,8–82,5 s), `gia-3-ty-lai-nha` (câu hỏng + “lại nha”), JSON AI hỏng. Lỗi cần âm thanh (lặng ngoài đường, vấp “đăng ký kênh”) kiểm bằng `test/real-check.mjs` với voice.wav thật.
+
 ## Kiểm thử thêm (4/11 chiều)
 `/home/claude/restart.sh` (máy dựng + Anthropic giả) · `AROLL=/tmp/aroll2.mp4 BROLL="/tmp/Phong bep.mp4" SIZE=1440x900 node test/ui.cjs` (chụp `test/out-*-live-*.png`).
 Giọng thử có ồn nâu + 1,6/0,9/1,2/1,1/1,5 s lặng + “Giá ba tỷ. Lại nha.” rồi nói lại giá đủ: 21,9 s → 13,3 s, bỏ đúng câu hỏng + “lại nha”, không mất chữ nào.
