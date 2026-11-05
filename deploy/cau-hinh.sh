@@ -52,6 +52,7 @@ setv XUONG_PUBLIC_URL ''
 setv APP_URL "$APP"
 n=$(nproc 2>/dev/null || echo 4)
 if [ "$n" -ge 8 ]; then cpu=3; ren=2; elif [ "$n" -ge 6 ]; then cpu=2; ren=2; else cpu=1; ren=1; fi
+[ -f "$DIR/.dung-chung" ] && { cpu=1; ren=1; }   # VPS dùng chung với MT5: 1 việc mỗi loại
 setv XUONG_CPU "$cpu"; setv XUONG_RENDER "$ren"
 [ -n "$(getv XUONG_KEEP_DAYS)" ] || setv XUONG_KEEP_DAYS 7
 [ -n "$(getv XUONG_CRF)" ] || setv XUONG_CRF 20

@@ -10,6 +10,10 @@ WorkingDirectory=/opt/xuong
 ExecStart=/usr/bin/node server.mjs
 Restart=always
 RestartSec=5
+# ưu tiên thấp: VPS có chương trình khác (MT5…) thì chương trình đó luôn được CPU / ổ đĩa trước
+Nice=10
+CPUWeight=20
+IOWeight=20
 # khoá & cấu hình đọc từ /opt/xuong/cau-hinh.txt (server tự nạp)
 Environment=NODE_ENV=production
 # không cho 1 video quá nặng chiếm hết RAM (để lại ~15 % cho hệ thống)

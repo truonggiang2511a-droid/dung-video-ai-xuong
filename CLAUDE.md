@@ -80,6 +80,10 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
   3 mã mời → `/opt/xuong/ma-moi.txt` (gitignore, chmod 600), `XUONG_HOST=127.0.0.1` (server chỉ nghe trong máy), số việc theo `nproc`; in 3 dòng dán Cloudflare
   (PRO_SECRET/PRO_ADMIN Secret, PRO_CODES Text) + link mời `pro.html?c=`. Lệnh tắt **`xuong`** (`deploy/xuong-lenh.sh` → /usr/local/bin): trạng thái (máy dựng,
   đường hầm, app đã thấy chưa), `nhat-ky`, `cau-hinh`, `ma-moi`, `them-ma TEN`, `cap-nhat` (`deploy/cap-nhat.sh`, không mở lại đường hầm), `khoi-dong-lai`.
+  **VPS dùng chung với MT5** (5/11 13:11: Giang mở VPS đang chạy MT5-1…9 + máy tính từ xa): cai-vps.sh tự nhận (`pgrep terminal64|wine|xrdp|vnc|nxserver`, hoặc `SHARED=1`)
+  → KHÔNG bật ufw (bật nhầm = mất đường vào máy tính từ xa; chỉ bật khi không có cổng nào khác mở ra ngoài ngoài 22), KHÔNG đổi giờ hệ thống, drop-in
+  `xuong.service.d/dung-chung.conf` (CPUQuota = ½ số nhân, MemoryMax 40 %), `.dung-chung` → cau-hinh.sh đặt 1 việc đổi file + 1 việc xuất. Mọi VPS: `Nice=10`,
+  `CPUWeight=20`, `IOWeight=20` (MT5 luôn được ưu tiên). Gói thư viện đổi tên theo bản Ubuntu (24.04 đuôi `t64`, 22.04 tên cũ). Cổng 8790 bận → dừng.
   Máy dựng xem địa chỉ đường hầm **mỗi 30 s**, đổi là báo app ngay (đo: 28 s), không đổi thì 4 phút báo 1 lần (app coi tắt sau 15 phút im).
 - **Khách vào**: app chính `public/pro.html` (nhập mã mời / link `?c=` → `/api/pro/token` → `/api/pro/info` → chuyển tới `<máy dựng>/#t=<mã khách>`); trang máy dựng lưu
   `xuong.tok` + `xuong.cust`, xoá `#t=` khỏi thanh địa chỉ, gửi `Authorization: Bearer`, KHÔNG BAO GIỜ hỏi mã xưởng với khách (hết hạn → “quay lại app”), mục
