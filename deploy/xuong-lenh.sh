@@ -20,11 +20,11 @@ case "${1:-}" in
   cap-nhat) need_root; exec bash "$DIR/deploy/cap-nhat.sh" ;;
   khoi-dong-lai) need_root; systemctl restart xuong xuong-tunnel; sleep 8; exec "$0" ;;
   ma-moi) need_root; cat "$DIR/ma-moi.txt"; c=$(grep -E '^PRO_CODES=' "$DIR/ma-moi.txt" | cut -d= -f2-)
-    echo; echo "Link mời từng khách:"; IFS=, read -ra L <<< "$c"; for it in "${L[@]}"; do echo "  ${it%%:*}: $APP/pro.html?c=${it#*:}"; done; exit 0 ;;
+    echo; echo "Link mời từng khách:"; IFS=, read -ra L <<< "$c"; for it in "${L[@]}"; do echo "  ${it%%:*}: $APP/pro?c=${it#*:}"; done; exit 0 ;;
   them-ma) need_root; t=$(printf '%s' "${2:-}" | tr -cd 'a-zA-Z0-9_-'); [ -n "$t" ] || { echo "Dùng: xuong them-ma ten-khach"; exit 1; }
     c=$(grep -E '^PRO_CODES=' "$DIR/ma-moi.txt" | cut -d= -f2-); m=$(openssl rand -hex 4)
     sed -i "s|^PRO_CODES=.*|PRO_CODES=${c:+$c,}$t:$m|" "$DIR/ma-moi.txt"
-    echo "Mã mới cho $t: $m   · link: $APP/pro.html?c=$m"
+    echo "Mã mới cho $t: $m   · link: $APP/pro?c=$m"
     echo "Dán dòng này vào Cloudflare (sửa biến PRO_CODES → Deploy):"; grep -E '^PRO_CODES=' "$DIR/ma-moi.txt" | cut -d= -f2-; exit 0 ;;
   ""|trang-thai|dia-chi) ;;
   *) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -38,7 +38,7 @@ u=$(curl -s --max-time 3 http://127.0.0.1:20241/quicktunnel | sed -n 's/.*"hostn
 [ -n "$u" ] && ok "Địa chỉ đường hầm: https://$u" || no "Đường hầm chưa có địa chỉ"
 i=$(curl -s --max-time 8 "$APP/api/pro/info")
 case "$i" in
-  *'"on":true'*) case "$i" in *"$u"*) ok "App chính đã thấy máy dựng → khách vào: $APP/pro.html" ;; *) no "App đang giữ địa chỉ CŨ — đợi 30 giây rồi chạy lại: xuong" ;; esac ;;
+  *'"on":true'*) case "$i" in *"$u"*) ok "App chính đã thấy máy dựng → khách vào: $APP/pro" ;; *) no "App đang giữ địa chỉ CŨ — đợi 30 giây rồi chạy lại: xuong" ;; esac ;;
   *'chưa bật'*|*'chua bat'*) no "App chính chưa bật dựng chuyên nghiệp → dán PRO_SECRET / PRO_ADMIN / PRO_CODES vào Cloudflare (xuong ma-moi)" ;;
   *) no "App chưa thấy máy dựng ($i)"; journalctl -u xuong -n 200 --no-pager 2>/dev/null | grep -E 'báo (được )?địa chỉ' | tail -n 2 | sed 's/^/    /' ;;
 esac

@@ -89,7 +89,7 @@ Bấm Deploy. Khoảng 30 giây sau máy dựng tự báo địa chỉ cho app.
 Kiểm:  xuong dia-chi        (xem lại 3 dòng trên:  xuong ma-moi)
 
 Mã của Giang (vào trang Dựng chuyên nghiệp, thấy mọi video):  $adm
-Trang cho khách:  $APP/pro.html
-Link mời khách 1:  $APP/pro.html?c=$c1
+Trang cho khách:  $APP/pro
+Link mời khách 1:  $APP/pro?c=$c1
 (mỗi mã mời là 1 người: chỉ thấy video của mã đó — thêm mã: xuong them-ma <tên>)
 EOF
