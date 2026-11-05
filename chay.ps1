@@ -10,4 +10,5 @@ Write-Host "Mở đường hầm Cloudflare. Tìm dòng có  https://....tryclou
 Write-Host "mở link đó trên điện thoại / máy tính, nhập mã truy cập hiện ở cửa sổ máy dựng." -ForegroundColor Cyan
 Write-Host "Link đổi mỗi lần chạy lại. Tắt cửa sổ này = tắt đường hầm." -ForegroundColor Yellow
 Write-Host ""
-cloudflared tunnel --no-autoupdate --url http://localhost:8790
+# --metrics: máy dựng đọc địa chỉ đường hầm ở 127.0.0.1:20241/quicktunnel rồi tự báo cho app chính (cần XUONG_SECRET trong cau-hinh.txt)
+cloudflared tunnel --no-autoupdate --metrics 127.0.0.1:20241 --url http://localhost:8790

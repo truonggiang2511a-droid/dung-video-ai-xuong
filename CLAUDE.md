@@ -61,6 +61,20 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
 - `j.chatLog` lưu mọi câu khách chat + `say` + thao tác → khách báo “AI không hiểu” thì đọc `state.json` → `chatLog`.
 - Chữ to tự co vừa khung (`fitBig` 1 dòng, `fitKey` ≤ 2 dòng) để “chữ to hơn” không đè nhãn; CSS chỉnh của khách đặt SAU kit.css (đặt trước bị kit.css đè mất).
 
+## NỐI APP CHÍNH + LÊN VPS (Giang 5/11 12:07: “làm tiếp kết nối với App chính, khách còn sửa được trên timeline, hướng dẫn đưa lên VPS”)
+- Giang chọn: **khách vẫn sửa trên timeline canvas cũ của app chính, xuất bản HyperFrames**, chưa ưng thì sửa lại rồi xuất lại (đã phản biện: xem trước canvas
+  sẽ không giống hệt bản HyperFrames xuất ra). Bước 2 (chưa làm): đổi qua lại timeline app ↔ timeline HyperFrames + nút trong app.
+- **Cầu nối (`lib/pro.mjs`)**: app chính (Worker) cấp **mã khách** (HMAC `PRO_SECRET` = `XUONG_SECRET` ở máy dựng; mã mời `PRO_CODES` / admin `PRO_ADMIN`, hạn 30 ngày);
+  máy dựng nhận `Authorization: Bearer <mã>` (khách chỉ thấy dự án của mình, `j.owner`) hoặc `x-key` (Giang, thấy hết). CORS chỉ mở cho `APP_URL` + `XUONG_ORIGINS`.
+  Máy dựng **tự báo địa chỉ** cho app (`POST {APP_URL}/api/pro/register`, ký HMAC, lúc mở + mỗi 5 phút): `XUONG_PUBLIC_URL` (VPS có tên miền) hoặc đọc
+  đường hầm nhanh ở `cloudflared --metrics 127.0.0.1:20241` → `/quicktunnel` (chay.ps1 đã thêm cờ). App: `GET /api/pro/info` → `{on, url}`.
+- **Sửa tay không gọi AI**: `POST /api/jobs/:id/ops {ops}` (cùng bộ thao tác chat: update start/dur/props/file, remove, add, cut, subs, texts, sfx, grade; icon gắn chữ đi theo
+  chữ) → `faceAvoid` → dựng lại index.html; **hoàn tác/làm lại** `POST …/undo|redo` (giữ 30 bước, chat cũng lưu bước). `GET /api/jobs` = danh sách dự án của khách.
+- **Xuất nhẹ**: `--crf 20 --max-bitrate 10M` (mặc định HyperFrames CRF 16 ≈ 19 Mbit/s → 396 MB/2:46); đo video 28 s: 8,3 Mbit/s. Đổi `XUONG_CRF`/`XUONG_MAXRATE`.
+- **Tự dọn ổ**: `XUONG_KEEP_DAYS` (mặc định 0 = tắt, VPS đặt 7) xoá dự án cũ + cache không dùng tới 2× số ngày.
+- **VPS**: `deploy/cai-vps.sh` (Ubuntu 24.04: ffmpeg có zscale, Node 22, thư viện Chrome, user `xuong`, `npm ci`, tắt telemetry HyperFrames, systemd `deploy/xuong.service`),
+  `deploy/cap-nhat.sh` (git pull + restart), `deploy/cau-hinh-mau.txt`. Kiểm cầu nối không cần Cloudflare: `node test/pro-bridge.mjs <worker.js app chính> <job đã dựng>` (15 ✅).
+
 ## LUẬT CỨNG: KHÔNG ĐÈ CHỮ (Giang 4/11 16:21)
 - Vùng dọc (9:16): **11–42 %** chữ điểm nhấn/hook · **45–60 %** nhãn (49 %) HOẶC nút kết (47 %) / theo dõi (45 %) — không cùng lúc · **67–76 %** phụ đề.
   Nhãn luôn 1 dòng (`--lfs` tự thu nhỏ theo độ dài). Đổi vị trí bất kỳ khối chữ nào → chạy `node test/overlap.cjs file://…/index.html` (đo khung chữ

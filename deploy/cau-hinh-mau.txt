@@ -1,0 +1,29 @@
+# CẤU HÌNH MÁY DỰNG TRÊN VPS — điền rồi: systemctl restart xuong
+# (file này chỉ nằm trên VPS, KHÔNG gửi lên GitHub / không dán vào chat)
+
+# Khoá Claude (console.anthropic.com → API Keys) — phục vụ khách bắt buộc dùng khoá API
+ANTHROPIC_API_KEY=
+XUONG_AI=api
+
+# Chuỗi bí mật nối app chính: đặt GIỐNG HỆT Secret PRO_SECRET của Worker dung-video-ai (Cloudflare)
+XUONG_SECRET=
+
+# Địa chỉ công khai của máy dựng (đường hầm có tên trên tên miền của Giang), vd https://xuong.ten-mien-cua-giang.vn
+XUONG_PUBLIC_URL=
+
+# App chính (chép lời, AI nhìn cảnh, nhận địa chỉ máy dựng)
+APP_URL=https://dung-video-ai.truonggiang2511a.workers.dev
+
+# Mã cho trang thử của Giang (để trống = tự sinh vào .xuong-key)
+XUONG_KEY=
+
+# Số việc cùng lúc (VPS 8 nhân): đổi file 3, xuất 2
+XUONG_CPU=3
+XUONG_RENDER=2
+
+# Giữ dự án bao nhiêu ngày rồi tự xoá (mỗi dự án ~1 GB)
+XUONG_KEEP_DAYS=7
+
+# Chất lượng xuất (CRF nhỏ = đẹp hơn, nặng hơn)
+XUONG_CRF=20
+XUONG_MAXRATE=10M

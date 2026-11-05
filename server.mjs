@@ -11,6 +11,8 @@ import { findFaces, warmFaces } from './lib/faces.mjs';
 import { STYLES, INDUSTRIES, IND } from './lib/styles.mjs';
 import { qcTimeline, qcExport } from './lib/qc.mjs';
 import { queueInfo } from './lib/queue.mjs';
+import { verifyToken, corsHeaders, startRegister } from './lib/pro.mjs';
+import { applyOps, faceAvoid } from './lib/pipeline.mjs';
 
 const ROOT = import.meta.dirname;
 const JOBS = path.join(ROOT, 'jobs');
@@ -93,9 +95,24 @@ async function pipeline(j) {
   save(j);
 }
 
+// LỊCH SỬ SỬA (hoàn tác / làm lại) — mỗi lần chat / sửa tay lưu timeline trước đó, giữ 30 bước
+function pushHist(j) {
+  const f = path.join(j.dir, 'timeline.json');
+  if (!fs.existsSync(f)) return;
+  j.hist = (j.hist || []).concat([fs.readFileSync(f, 'utf8')]).slice(-30); j.redo = [];
+}
+function setTimeline(j, T) {
+  fs.writeFileSync(path.join(j.dir, 'timeline.json'), JSON.stringify(T, null, 2));
+  j.timeline = T; j.version = (j.version || 0) + 1; j.approved = false;
+  writeComposition(j);
+}
+
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = url.pathname;
+  // trang app chính (khác địa chỉ) gọi thẳng máy dựng → CORS chỉ cho địa chỉ app
+  for (const [k, v] of Object.entries(corsHeaders(req, APP_URL))) res.setHeader(k, v);
+  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
   try {
     if (p === '/' || p === '/index.html') return serveFile(req, res, path.join(ROOT, 'ui', 'index.html'));
     if (p.startsWith('/ui/')) return serveFile(req, res, path.join(ROOT, 'ui', path.basename(p)));
@@ -114,22 +131,54 @@ http.createServer(async (req, res) => {
       return serveFile(req, res, f);
     }
     if (!p.startsWith('/api/')) { res.writeHead(404); return res.end(); }
-    if (req.headers['x-key'] !== KEY) return send(res, 401, { error: 'Sai mã truy cập' });
+    // ai được dùng: Giang (mã xưởng x-key, thấy mọi dự án) hoặc khách app chính (mã do app ký, chỉ thấy dự án của mình)
+    const who = req.headers['x-key'] === KEY ? { u: 'admin', adm: true } : verifyToken(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''));
+    if (!who) return send(res, 401, { error: 'Sai mã truy cập' });
+    if (p === '/api/jobs' && req.method === 'GET') { // danh sách dự án của khách (mới nhất trước)
+      const list = fs.readdirSync(JOBS).map(load).filter(x => x && (who.adm || x.owner === who.u)).sort((a, b) => b.created - a.created).slice(0, 50)
+        .map(x => ({ id: x.id, status: x.status, created: x.created, duration: x.timeline?.duration, industry: x.industry, style: x.styleInfo?.id, name: x.media?.find(m => m.main)?.name || '' }));
+      return send(res, 200, { jobs: list });
+    }
 
     if (p === '/api/jobs' && req.method === 'POST') {
       const b = await body(req);
       const id = crypto.randomBytes(12).toString('base64url');
       // ngành (20 nhóm, rỗng = AI tự nhận diện) + phong cách (rỗng = theo ngành / AI chọn)
       const ind = IND[b.industry] ? b.industry : '', sty = STYLES[b.style] ? b.style : '';
-      const j = { id, genre: b.genre || IND[ind]?.genre || 'chung', industry: ind, style: sty, format: b.format || '9:16', status: 'new', steps: [], created: Date.now(), dir: path.join(JOBS, id) };
+      const j = { id, owner: who.u, ownerName: who.n || '', genre: b.genre || IND[ind]?.genre || 'chung', industry: ind, style: sty, format: b.format || '9:16', status: 'new', steps: [], created: Date.now(), dir: path.join(JOBS, id) };
       fs.mkdirSync(path.join(j.dir, 'raw'), { recursive: true });
       jobs.set(id, j); save(j);
       return send(res, 200, { id });
     }
     const m = p.match(/^\/api\/jobs\/([^/]+)(?:\/(\w+))?$/);
     const j = m && load(m[1]);
-    if (!j) return send(res, 404, { error: 'Không thấy dự án' });
+    if (!j || (!who.adm && j.owner !== who.u)) return send(res, 404, { error: 'Không thấy dự án' });
     const act = m[2];
+    // SỬA TAY trên timeline (app chính / trang thử): dời, kéo dài, xoá, sửa chữ, cắt đoạn… = cùng bộ thao tác với chat, KHÔNG gọi AI
+    if (act === 'ops' && req.method === 'POST') {
+      const b = await body(req);
+      if (j.status !== 'done') return send(res, 409, { error: 'Video chưa dựng xong' });
+      const ops = (Array.isArray(b.ops) ? b.ops : []).slice(0, 50).map(o => ({ ...o, by: 'user' }));
+      if (!ops.length) return send(res, 400, { error: 'Không có thao tác' });
+      pushHist(j);
+      const T = JSON.parse(fs.readFileSync(path.join(j.dir, 'timeline.json'), 'utf8'));
+      const applied = applyOps(T, ops, j);
+      faceAvoid(T, j);
+      setTimeline(j, T);
+      (j.chatLog = j.chatLog || []).push({ t: Date.now(), text: '(sửa tay)', ops: applied.map(o => o.op + ':' + (o.id || '')) });
+      save(j);
+      qcTimeline(j, T).then(q => { j.qc = q; save(j); }).catch(() => {});
+      return send(res, 200, { ops: applied, version: j.version, timeline: T });
+    }
+    if ((act === 'undo' || act === 'redo') && req.method === 'POST') {
+      const from = act === 'undo' ? (j.hist || []) : (j.redo || []), to = act === 'undo' ? (j.redo = j.redo || []) : (j.hist = j.hist || []);
+      if (!from.length) return send(res, 409, { error: act === 'undo' ? 'Không còn gì để hoàn tác' : 'Không còn gì để làm lại' });
+      const f = path.join(j.dir, 'timeline.json');
+      to.push(fs.readFileSync(f, 'utf8'));
+      setTimeline(j, JSON.parse(from.pop()));
+      save(j);
+      return send(res, 200, { version: j.version, timeline: j.timeline, undo: (j.hist || []).length, redo: (j.redo || []).length });
+    }
     if (act === 'upload' && req.method === 'PUT') { // tải từng khúc ≤ 8 MB (đường hầm miễn phí giới hạn 100 MB/lần gửi)
       const name = path.basename(url.searchParams.get('name') || 'video.mp4').replace(/[^\p{L}\p{N}._ -]/gu, '_');
       const f = path.join(j.dir, 'raw', name), off = +url.searchParams.get('offset') || 0;
@@ -152,7 +201,8 @@ http.createServer(async (req, res) => {
       return send(res, 200, { ok: true });
     }
     if (!act && req.method === 'GET') {
-      const { dir, words, tlWords, brollsReady, sentences, silences, autoDrops, fillCuts, mumbleCuts, segs, live, ...pub } = j;
+      const { dir, words, tlWords, brollsReady, sentences, silences, autoDrops, fillCuts, mumbleCuts, segs, live, hist, redo, faces, ...pub } = j;
+      pub.undo = (hist || []).length; pub.redoN = (redo || []).length;
       const since = +url.searchParams.get('seq') || -1;
       if (live && live.seq !== since) { // gửi phần đang dựng (chỉ khi có thay đổi)
         pub.live = { ...live, media: (j.media || []).map(({ name, dur, main, ready, file }) => ({ name, dur, main, ready, file })),
@@ -169,7 +219,7 @@ http.createServer(async (req, res) => {
       if (j.status !== 'done') return send(res, 409, { error: 'Video chưa dựng xong' });
       if (j.chat?.status === 'running') return send(res, 409, { error: 'AI đang sửa yêu cầu trước' });
       const n = (j.chat?.n || 0) + 1, t0 = Date.now();
-      j.chat = { status: 'running', n, t0 }; save(j);
+      j.chat = { status: 'running', n, t0 }; pushHist(j); save(j);
       const text = String(b.text || '').slice(0, 800);
       chat(j, text, b.target, s => { step(j, s); j.chat.say = s; })
         .then(({ ops, say }) => {
@@ -205,4 +255,22 @@ http.createServer(async (req, res) => {
   console.log(`Mã truy cập (dán vào trang khi được hỏi): ${KEY}`);
   console.log(`AI: ${aiMode()}${aiMode() === 'claude' ? ' (Claude Code — chỉ dùng thử nội bộ)' : ''} · chép lời qua ${APP_URL}\n`);
   warmFaces(s => console.log(s));
+  // báo địa chỉ máy dựng cho app chính (khách app chính dựng qua máy này) — cần XUONG_SECRET trong cau-hinh.txt
+  startRegister(APP_URL, () => ({ queue: queueInfo(), ver: 'xuong-1' }), s => console.log(s));
+  // TỰ DỌN Ổ (VPS): XUONG_KEEP_DAYS = số ngày giữ dự án (mặc định 0 = không dọn — laptop Giang giữ để soi lỗi).
+  // Mỗi dự án ~1 GB (file gốc + bản đổi); bộ nhớ phân tích cache/ không dùng tới sau 2× số ngày đó cũng xoá.
+  const keep = +process.env.XUONG_KEEP_DAYS || 0;
+  if (keep > 0) {
+    const sweep = () => {
+      const old = Date.now() - keep * 86400e3; let n = 0;
+      for (const id of fs.readdirSync(JOBS)) {
+        const j = load(id); if (!j || j.status === 'running' || j.render?.status === 'running' || j.chat?.status === 'running') continue;
+        if ((j.created || 0) < old) { fs.rmSync(path.join(JOBS, id), { recursive: true, force: true }); jobs.delete(id); n++; }
+      }
+      const C = path.join(ROOT, 'cache');
+      if (fs.existsSync(C)) for (const k of fs.readdirSync(C)) { const d = path.join(C, k); try { if (fs.statSync(d).mtimeMs < Date.now() - 2 * keep * 86400e3) { fs.rmSync(d, { recursive: true, force: true }); n++; } } catch {} }
+      if (n) console.log(`Dọn ổ: xoá ${n} dự án / bộ nhớ cũ hơn ${keep} ngày`);
+    };
+    sweep(); setInterval(sweep, 6 * 3600e3);
+  }
 });
