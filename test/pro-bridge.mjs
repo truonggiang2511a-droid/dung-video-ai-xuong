@@ -19,13 +19,23 @@ const app = http.createServer(async (req, res) => {
 }).listen(8787);
 const ok = (c, m) => console.log(c ? '✅' : '❌', m);
 // máy dựng (cổng 8791 để không đụng máy đang chạy)
-const xs = spawn('node', ['server.mjs'], { cwd: path.resolve(import.meta.dirname, '..'), env: { ...process.env, PORT: '8791', XUONG_KEY: 'test123', XUONG_SECRET: SECRET, APP_URL: 'http://localhost:8787', XUONG_PUBLIC_URL: 'https://xuong-thu.example.com' } });
+// đường hầm nhanh giả (cloudflared --metrics …/quicktunnel) — giống VPS không tên miền
+let tunnelHost = 'thu-mot-hai.trycloudflare.com';
+const tun = http.createServer((q, r) => { r.writeHead(200, { 'content-type': 'application/json' }); r.end(JSON.stringify({ hostname: tunnelHost })); }).listen(20299, '127.0.0.1');
+const xs = spawn('node', ['server.mjs'], { cwd: path.resolve(import.meta.dirname, '..'), env: { ...process.env, PORT: '8791', XUONG_HOST: '127.0.0.1', XUONG_KEY: 'test123', XUONG_SECRET: SECRET, APP_URL: 'http://localhost:8787', XUONG_PUBLIC_URL: '', XUONG_TUNNEL_METRICS: '127.0.0.1:20299' } });
 let log = ''; xs.stdout.on('data', d => log += d); xs.stderr.on('data', d => log += d);
 await new Promise(r => setTimeout(r, 2500));
 const j = async (u, o = {}) => { const r = await fetch(u, o); return { s: r.status, h: r.headers, b: await r.json().catch(() => ({})) }; };
 try {
   let info; for (let k = 0; k < 20; k++) { info = await j('http://localhost:8787/api/pro/info'); if (info.b.on) break; await new Promise(r => setTimeout(r, 500)); }
-  ok(info.b.on && info.b.url === 'https://xuong-thu.example.com', `máy dựng tự báo địa chỉ cho app: ${JSON.stringify(info.b)}`);
+  ok(info.b.on && info.b.url === 'https://' + tunnelHost, `máy dựng tự báo địa chỉ đường hầm nhanh cho app: ${info.b.url}`);
+  // chép lời / AI nhìn: máy dựng ký → app bỏ giới hạn theo IP (VPS nhiều khách chung 1 IP); không ký → vẫn bị giới hạn
+  const { proHeaders } = await import('../lib/pro.mjs');
+  process.env.XUONG_SECRET = SECRET;
+  const env2 = { ...env, AI: { run: async () => ({ response: '{}' }) }, STT_LIMIT: { limit: async () => ({ success: false }) } };
+  const vis = h => W.default.fetch(new Request('http://localhost:8787/api/vision', { method: 'POST', headers: { 'content-type': 'application/json', ...h }, body: JSON.stringify({ items: [] }) }), env2);
+  ok((await vis({})).status === 429 && (await vis(proHeaders('/api/vision'))).status !== 429 && (await vis({ 'x-pro-ts': String(Math.floor(Date.now() / 1000)), 'x-pro-sign': 'gia' })).status === 429,
+    'AI nhìn: máy dựng ký → không bị giới hạn IP; không ký / ký giả → 429');
   ok((await j('http://localhost:8787/api/pro/token', { method: 'POST', body: JSON.stringify({ code: 'sai-ma' }) })).s === 403, 'mã mời sai bị chặn');
   const t1 = (await j('http://localhost:8787/api/pro/token', { method: 'POST', body: JSON.stringify({ code: 'moi-2611' }) })).b;
   const t2 = (await j('http://localhost:8787/api/pro/token', { method: 'POST', body: JSON.stringify({ code: 'moi-7788' }) })).b;
@@ -33,7 +43,7 @@ try {
   // giả chữ ký máy dựng → app từ chối
   const bad = await j('http://localhost:8787/api/pro/register', { method: 'POST', headers: { 'x-pro-ts': String(Math.floor(Date.now() / 1000)), 'x-pro-sign': 'gia' }, body: JSON.stringify({ url: 'https://ke-gian.com' }) });
   ok(bad.s === 401, 'kẻ lạ giả máy dựng đổi địa chỉ → bị chặn');
-  const X = 'http://localhost:8791', A = tok => ({ authorization: 'Bearer ' + tok, origin: 'http://localhost:8787', 'content-type': 'application/json' });
+  const X = 'http://127.0.0.1:8791', A = tok => ({ authorization: 'Bearer ' + tok, origin: 'http://localhost:8787', 'content-type': 'application/json' });
   ok((await j(X + '/api/jobs', { headers: { origin: 'http://localhost:8787' } })).s === 401, 'gọi máy dựng không có mã → 401');
   ok((await j(X + '/api/jobs', { headers: { authorization: 'Bearer ' + t1.token.slice(0, -2) + 'xx' } })).s === 401, 'mã khách bị sửa → 401');
   const pre = await fetch(X + '/api/jobs', { method: 'OPTIONS', headers: { origin: 'http://localhost:8787', 'access-control-request-method': 'POST' } });
@@ -61,4 +71,9 @@ try {
     ok(rd.s === 200 && rd.b.timeline.clips.find(c => c.id === tx.id).props.text === 'CHỮ KHÁCH SỬA', 'làm lại → chữ khách sửa');
     fs.rmSync(dst, { recursive: true, force: true });
   }
-} finally { xs.kill(); app.close(); console.log('--- máy dựng:', log.split('\n').filter(l => /báo|nối|Chưa/.test(l)).join(' | ')); }
+  if (process.env.TUNNEL_CHANGE) {
+    tunnelHost = 'dia-chi-moi-ba-bon.trycloudflare.com'; const t0 = Date.now(); let i2;
+    for (let k = 0; k < 45; k++) { await new Promise(r => setTimeout(r, 1000)); i2 = await j('http://localhost:8787/api/pro/info'); if (i2.b.url === 'https://' + tunnelHost) break; }
+    ok(i2.b.url === 'https://' + tunnelHost, `đường hầm đổi địa chỉ → app biết sau ${Math.round((Date.now() - t0) / 1000)} s`);
+  }
+} finally { xs.kill(); app.close(); tun.close(); console.log('--- máy dựng:', log.split('\n').filter(l => /báo|nối|Chưa/.test(l)).join(' | ')); }

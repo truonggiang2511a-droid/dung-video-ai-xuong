@@ -72,8 +72,22 @@ Claude Code gọi: `claude -p "<lệnh tiếng Anh ngắn>" --output-format json
   chữ) → `faceAvoid` → dựng lại index.html; **hoàn tác/làm lại** `POST …/undo|redo` (giữ 30 bước, chat cũng lưu bước). `GET /api/jobs` = danh sách dự án của khách.
 - **Xuất nhẹ**: `--crf 20 --max-bitrate 10M` (mặc định HyperFrames CRF 16 ≈ 19 Mbit/s → 396 MB/2:46); đo video 28 s: 8,3 Mbit/s. Đổi `XUONG_CRF`/`XUONG_MAXRATE`.
 - **Tự dọn ổ**: `XUONG_KEEP_DAYS` (mặc định 0 = tắt, VPS đặt 7) xoá dự án cũ + cache không dùng tới 2× số ngày.
-- **VPS**: `deploy/cai-vps.sh` (Ubuntu 24.04: ffmpeg có zscale, Node 22, thư viện Chrome, user `xuong`, `npm ci`, tắt telemetry HyperFrames, systemd `deploy/xuong.service`),
-  `deploy/cap-nhat.sh` (git pull + restart), `deploy/cau-hinh-mau.txt`. Kiểm cầu nối không cần Cloudflare: `node test/pro-bridge.mjs <worker.js app chính> <job đã dựng>` (15 ✅).
+- **VPS KHÔNG CẦN TÊN MIỀN (Giang 5/11 12:31: “tên mình vẫn để vậy chưa thuê… đưa lên VPS, tắt laptop, khách vô app làm thử”)**:
+  `curl -fsSL …/deploy/cai-vps.sh | bash` (Ubuntu 24.04, root): apt (ffmpeg có zscale, sudo, ufw chỉ mở ssh, fail2ban, giờ VN), Node 22, user `xuong`, `/opt/xuong`,
+  `npm ci`, `hyperframes browser ensure` (tải sẵn Chrome), cloudflared `.deb` từ GitHub, systemd `xuong.service` (MemoryMax 85 %) + **`xuong-tunnel.service`**
+  (`cloudflared tunnel --no-autoupdate --metrics 127.0.0.1:20241 --url http://127.0.0.1:8790` = đường hầm nhanh, địa chỉ đổi mỗi lần mở lại) → gọi
+  **`deploy/cau-hinh.sh`** (qua /dev/tty): hỏi khoá Claude (kiểm thật `GET api.anthropic.com/v1/models` = 200), tự sinh `XUONG_SECRET` (hex 32 byte), mã admin +
+  3 mã mời → `/opt/xuong/ma-moi.txt` (gitignore, chmod 600), `XUONG_HOST=127.0.0.1` (server chỉ nghe trong máy), số việc theo `nproc`; in 3 dòng dán Cloudflare
+  (PRO_SECRET/PRO_ADMIN Secret, PRO_CODES Text) + link mời `pro.html?c=`. Lệnh tắt **`xuong`** (`deploy/xuong-lenh.sh` → /usr/local/bin): trạng thái (máy dựng,
+  đường hầm, app đã thấy chưa), `nhat-ky`, `cau-hinh`, `ma-moi`, `them-ma TEN`, `cap-nhat` (`deploy/cap-nhat.sh`, không mở lại đường hầm), `khoi-dong-lai`.
+  Máy dựng xem địa chỉ đường hầm **mỗi 30 s**, đổi là báo app ngay (đo: 28 s), không đổi thì 4 phút báo 1 lần (app coi tắt sau 15 phút im).
+- **Khách vào**: app chính `public/pro.html` (nhập mã mời / link `?c=` → `/api/pro/token` → `/api/pro/info` → chuyển tới `<máy dựng>/#t=<mã khách>`); trang máy dựng lưu
+  `xuong.tok` + `xuong.cust`, xoá `#t=` khỏi thanh địa chỉ, gửi `Authorization: Bearer`, KHÔNG BAO GIỜ hỏi mã xưởng với khách (hết hạn → “quay lại app”), mục
+  **“Video đã dựng”** (GET /api/jobs, chỉ của mã đó) mở lại được.
+- **1 IP VPS nhiều khách**: chép lời / AI nhìn gửi kèm `proHeaders()` (HMAC `ts\npath`) → Worker `fromXuong` bỏ giới hạn 30 lượt/phút/IP; bị 429 thì đợi 20/40/60 s gửi lại.
+- Kiểm: `node test/pro-bridge.mjs <worker.js> <job>` (17 ✅, `TUNNEL_CHANGE=1` thêm bài đổi địa chỉ đường hầm) · `SIZE=390x844 node test/pro-flow.cjs <thư mục app chính có site/> <job>`
+  (trình duyệt đi đúng đường khách: pro.html → mã mời → máy dựng …trycloudflare.com giả → Video đã dựng → mở timeline; 11 ✅) · script cấu hình thử bằng curl giả:
+  `NOSYS=1 XUONG_DIR=<thư mục> bash deploy/cau-hinh.sh`. CHƯA chạy trên VPS thật (máy ảo không có systemd/cloudflared).
 
 ## LUẬT CỨNG: KHÔNG ĐÈ CHỮ (Giang 4/11 16:21)
 - Vùng dọc (9:16): **11–42 %** chữ điểm nhấn/hook · **45–60 %** nhãn (49 %) HOẶC nút kết (47 %) / theo dõi (45 %) — không cùng lúc · **67–76 %** phụ đề.

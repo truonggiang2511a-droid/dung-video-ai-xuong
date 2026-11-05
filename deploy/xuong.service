@@ -12,8 +12,8 @@ Restart=always
 RestartSec=5
 # khoá & cấu hình đọc từ /opt/xuong/cau-hinh.txt (server tự nạp)
 Environment=NODE_ENV=production
-# không cho chiếm hết RAM nếu 1 video quá nặng (VPS 24 GB)
-MemoryMax=20G
+# không cho 1 video quá nặng chiếm hết RAM (để lại ~15 % cho hệ thống)
+MemoryMax=85%
 LimitNOFILE=65536
 
 [Install]

@@ -1,0 +1,15 @@
+# Đường hầm nhanh Cloudflare cho máy dựng (không cần tên miền). Địa chỉ …trycloudflare.com đổi mỗi lần mở lại;
+# máy dựng đọc địa chỉ ở 127.0.0.1:20241/quicktunnel và tự báo cho app chính (~30 giây).
+[Unit]
+Description=Duong ham Cloudflare cho may dung Dung Video AI
+After=network-online.target xuong.service
+Wants=network-online.target
+
+[Service]
+User=xuong
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate --metrics 127.0.0.1:20241 --url http://127.0.0.1:8790
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

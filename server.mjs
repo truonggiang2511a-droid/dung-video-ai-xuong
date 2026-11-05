@@ -250,7 +250,7 @@ http.createServer(async (req, res) => {
     }
     send(res, 404, { error: 'Không có lệnh này' });
   } catch (e) { console.error(e); send(res, 500, { error: e.message }); }
-}).listen(PORT, () => {
+}).listen(PORT, process.env.XUONG_HOST || undefined, () => { // VPS: XUONG_HOST=127.0.0.1 (chỉ đường hầm vào được, không lộ cổng 8790 ra mạng)
   console.log(`\nMáy dựng Dựng Video AI đang chạy: http://localhost:${PORT}`);
   console.log(`Mã truy cập (dán vào trang khi được hỏi): ${KEY}`);
   console.log(`AI: ${aiMode()}${aiMode() === 'claude' ? ' (Claude Code — chỉ dùng thử nội bộ)' : ''} · chép lời qua ${APP_URL}\n`);
